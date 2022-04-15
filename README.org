@@ -1,12 +1,7 @@
-#+TITLE: Readme
+#+TITLE: Literate-DevOps
 #+STARTUP: show4levels
 
-* README
-:PROPERTIES:
-:header-args: :tangle misc/functions.zsh
-:TOC:      :include all
-:END:
-
+* Setup
 How to use snippets:
 
 Add snippets folder to your PATH
@@ -59,7 +54,14 @@ bindkey "^X'" _tru_fzf-snippet
 bindkey "^[^[" _tru_fzf-snippet
 #+end_src
 
+* README
+:PROPERTIES:
+:header-args: :tangle misc/functions.zsh
+:TOC:      :include all
+:END:
+
 ** Contents                                                                    :TOC_5:
+- [[#setup][Setup]]
 - [[#readme][README]]
   - [[#functions][Functions]]
     - [[#truall-the-color][tru/all-the-color]]
