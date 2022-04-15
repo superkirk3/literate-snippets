@@ -1,7 +1,7 @@
 #+TITLE: Literate-DevOps
 #+STARTUP: show4levels
 
-[[./screencast.gif]]
+[[./demo.gif]]
 
 * Setup
 How to use snippets:
