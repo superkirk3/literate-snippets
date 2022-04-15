@@ -107,9 +107,6 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#gh-set-default-branch][gh set default branch]]
       - [[#gh-issue-search-filter-today-involves][gh issue search filter today involves]]
       - [[#gh-issue-has-new-comments][gh issue has new comments]]
-    - [[#ssh-config-patch][ssh config patch]]
-    - [[#ssh-config-unpatch][ssh config unpatch]]
-    - [[#gitea-up][gitea up]]
     - [[#aws][aws]]
       - [[#aws-waf][aws waf]]
       - [[#aws-codepipeline-restart][aws codepipeline restart]]
@@ -123,6 +120,9 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#aws-clear-envs][aws clear envs]]
       - [[#aws-shared-bastion][aws shared bastion]]
       - [[#aws-shared-bastion-forward-rds-connect][aws shared bastion forward rds connect]]
+    - [[#ssh-config-patch][ssh config patch]]
+    - [[#ssh-config-unpatch][ssh config unpatch]]
+    - [[#gitea-up][gitea up]]
     - [[#uicli-login-uid-aws][uicli login uid aws]]
     - [[#terraform-init-repo-privilege-s3-backend][terraform init repo-privilege s3 backend]]
     - [[#legacy-shared-bastion][legacy shared bastion]]
@@ -1091,27 +1091,6 @@ gh issue list --repo "Ubiquiti-UID/uid.devops-pandora" -s open -S "is:issue sort
           | { title, number, url, new_comment: (.comments | max_by(.createdAt) | select(.author.login!="tru2dagame")) }
           | "########", "\(.url)", "\u001b[32m\(.title)\u001b[0m", "\(.new_comment.author.login):", " ", "\(.new_comment.body | .[0:200])"'
 #+end_src
-*** ssh config patch
-#+begin_src shell
-#!/bin/zsh
-# ssh config local patch
-git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
-#+end_src
-
-*** ssh config unpatch
-#+begin_src shell
-#!/bin/zsh
-# ssh config local unpatch
-git -C '$DEV_CONFIG_PATH/ssh' apply -R uidev.local.patch
-#+end_src
-
-*** gitea up
-#+begin_src shell
-#!/bin/zsh
-# gitea docker-compose up
-ttab -a iTerm2 -G -d $MY_DOCKER_PATH/gitea 'docker-compose up'
-#+end_src
-
 *** aws
 **** aws waf
 #+begin_src sh
@@ -1337,6 +1316,27 @@ echo $RDS | jq -r ".host" | tr -d "\n" | pbcopy; sleep 1
 echo $RDS | jq -r ".username" | tr -d "\n" | pbcopy; sleep 1
 echo $RDS | jq -r ".password" | tr -d "\n" | pbcopy; sleep 1
 ssh -vvv root@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=shared-bastion" | jq -r  ".Reservations[].Instances[].InstanceId") -N -L 3306:$(echo $RDS | jq -r ".host"):3306
+#+end_src
+
+*** ssh config patch
+#+begin_src shell
+#!/bin/zsh
+# ssh config local patch
+git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+#+end_src
+
+*** ssh config unpatch
+#+begin_src shell
+#!/bin/zsh
+# ssh config local unpatch
+git -C '$DEV_CONFIG_PATH/ssh' apply -R uidev.local.patch
+#+end_src
+
+*** gitea up
+#+begin_src shell
+#!/bin/zsh
+# gitea docker-compose up
+ttab -a iTerm2 -G -d $MY_DOCKER_PATH/gitea 'docker-compose up'
 #+end_src
 
 *** uicli login uid aws
