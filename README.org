@@ -16,7 +16,7 @@ export PATH=$SNIPPETS_PATH:$PATH
 chmod -R +x $SNIPPETS_PATH/*
 #+end_src
 
-Add =_tru_fzf-snippet= to zshrc
+Add =_tru_fzf-snippet= to zshrc and set =ESC ESC= to bindkey
 #+begin_src sh
 _tru_fzf-snippet() {
 
@@ -54,7 +54,9 @@ _tru_fzf-snippet() {
             ;;
     esac
 }
-
+zle -N _tru_fzf-snippet
+bindkey "^X'" _tru_fzf-snippet
+bindkey "^[^[" _tru_fzf-snippet
 #+end_src
 
 ** Contents                                                                    :TOC_5:
