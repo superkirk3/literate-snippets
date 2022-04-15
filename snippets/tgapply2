@@ -1,0 +1,26 @@
+#!/bin/zsh
+# terraform tgapply2 terragrunt apply
+# export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -t|--worktree) ARG_WORKTREE="$2"; shift ;;
+    esac
+    shift
+done
+
+if [ -z "$ARG_WORKTREE" ]; then
+    WORKTREE=`ls $UID_TF_MODULES_BASE_PATH | fzf --query "$WORKTREE"`
+    if [ -z "$WORKTREE" ]; then
+        return false
+    fi
+else
+    WORKTREE=$ARG_WORKTREE
+fi
+
+export TG_SRC=$UID_TF_MODULES_BASE_PATH/$WORKTREE/product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+
+# echo "0.12.26.2" > .terraform-version
+terragrunt apply --terragrunt-source $TG_SRC plan.out 2>&1 | tee -a `pwd`/result-$(date +"%Y-%m-%d-%H-%M-%S").txt
+# git -C $DEV_CONFIG_PATH/ssh apply -R uidev.local.patch
+# git clean -e "version" -f
+# rm -f .terraform-version

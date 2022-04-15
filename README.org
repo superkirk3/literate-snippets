@@ -1,0 +1,1405 @@
+#+TITLE: Readme
+#+STARTUP: show4levels
+
+* README
+:PROPERTIES:
+:header-args: :tangle misc/functions.zsh
+:TOC:      :include all
+:END:
+
+** Contents                                                                    :TOC_5:
+- [[#readme][README]]
+  - [[#functions][Functions]]
+    - [[#truall-the-color][tru/all-the-color]]
+    - [[#truawslogslegacy][tru/awslogs(legacy)]]
+  - [[#misc][misc]]
+    - [[#alfred][alfred]]
+    - [[#alias-convert_report][alias convert_report]]
+  - [[#snippets][Snippets]]
+    - [[#tab-stop-example][tab stop example]]
+    - [[#terraform][terraform]]
+      - [[#tgplan][tgplan]]
+      - [[#tgplan-01321][tgplan 01321]]
+      - [[#tgplan2][tgplan2]]
+      - [[#tgplan-oidc-whitelist][tgplan oidc whitelist]]
+      - [[#tgplan-tmux][tgplan tmux]]
+      - [[#tgplan-tmux2][tgplan tmux2]]
+      - [[#tgplan-tmux-snippet][tgplan tmux snippet]]
+      - [[#tgapply][tgapply]]
+      - [[#tgapply2][tgapply2]]
+      - [[#tfplan][tfplan]]
+      - [[#tfapply][tfapply]]
+      - [[#tfplan-and-apply][tfplan and apply]]
+    - [[#git][git]]
+      - [[#git-diff-name-only][git diff name only]]
+      - [[#git-log-history-search][git log history search]]
+      - [[#git-reset-hard-head-to-origin][git reset hard head to origin]]
+    - [[#ghe][ghe]]
+      - [[#ghe-alpha-release-note][ghe alpha release note]]
+      - [[#ghe-pull-request-create-to-release-office-to-alpha][ghe pull-request create to release office to alpha]]
+      - [[#ghe-list-release-pr-by-label][ghe list release pr by label]]
+      - [[#ghe-merge-approved-prs][ghe merge approved prs]]
+      - [[#hub-pr-merge][hub pr merge]]
+      - [[#hub-api-issue-pr-comment-and-add-label][hub api issue pr comment and add label]]
+      - [[#ghe-gh-add-terraform-module-label][ghe gh add terraform module label]]
+      - [[#hub-api-list-collaborators][hub api list collaborators]]
+      - [[#get-ghe-pr-comment][get ghe pr comment]]
+      - [[#get-ghe-pr-comment-without-paste][get ghe pr comment without paste]]
+      - [[#ghe-api-stop-webhook][ghe api stop webhook]]
+      - [[#ghe-api-enable-webhook][ghe api enable webhook]]
+      - [[#ghe-release-branch-organization][ghe release branch organization]]
+      - [[#ghe-get-commit-id-from-aws-codepipeline-zip-file][ghe get commit id from aws codepipeline zip file]]
+      - [[#ghe-pr-diff-folder][ghe pr diff folder]]
+      - [[#gh-set-default-branch][gh set default branch]]
+      - [[#gh-issue-search-filter-today-involves][gh issue search filter today involves]]
+      - [[#gh-issue-has-new-comments][gh issue has new comments]]
+    - [[#ssh-config-patch][ssh config patch]]
+    - [[#ssh-config-unpatch][ssh config unpatch]]
+    - [[#gitea-up][gitea up]]
+    - [[#aws][aws]]
+      - [[#aws-waf][aws waf]]
+      - [[#aws-codepipeline-restart][aws codepipeline restart]]
+      - [[#aws-codepipeline-list-pipeline-executions][aws codepipeline list-pipeline-executions]]
+      - [[#aws-update-service-desired-count][aws update-service desired-count]]
+      - [[#aws-application-autoscaling-describe-scalable-targets][aws application-autoscaling describe-scalable-targets]]
+      - [[#aws-ecs-enable-containerinsights][aws ecs enable containerInsights]]
+      - [[#aws-get-secrets][aws get secrets]]
+      - [[#aws-set-secrets][aws set secrets]]
+      - [[#aws-delete-secrets-force-without-recovery][aws delete secrets force without recovery]]
+      - [[#aws-clear-envs][aws clear envs]]
+      - [[#aws-shared-bastion][aws shared bastion]]
+      - [[#aws-shared-bastion-forward-rds-connect][aws shared bastion forward rds connect]]
+    - [[#uicli-login-uid-aws][uicli login uid aws]]
+    - [[#terraform-init-repo-privilege-s3-backend][terraform init repo-privilege s3 backend]]
+    - [[#legacy-shared-bastion][legacy shared bastion]]
+    - [[#find-example][find example]]
+    - [[#mac-custom-ip-route][mac custom ip route]]
+    - [[#letsencrypt-certbot][letsencrypt certbot]]
+    - [[#fzf-kill-ps][fzf kill ps]]
+    - [[#iftop-port][iftop port]]
+    - [[#emacs-open-tf-module][emacs open tf module]]
+    - [[#silicon-screenshot][silicon screenshot]]
+    - [[#ffmpeg-download-m3u8-to-mp4][ffmpeg download m3u8 to mp4]]
+    - [[#print-all-the-color][print all the color]]
+
+** Functions
+*** tru/all-the-color
+#+begin_src sh
+tru/all-the-color() {
+    for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done
+
+    # for COLOR in {0..255}
+    # do
+    #     for STYLE in "38;5"
+    #     do
+    #         TAG="\033[${STYLE};${COLOR}m"
+    #         STR="${STYLE};${COLOR}"
+    #         echo -ne "${TAG}${STR}${NONE}  "
+    #     done
+    #     echo
+    # done
+}
+
+#+end_src
+
+*** tru/awslogs(legacy)
+#+begin_src sh
+tru/awslogs() {
+    AWS_REGION=us-west-2 AWS_DEFAULT_PROFILE=legacy-devops AWS_PROFILE=legacy-devops awslogs get $1 ALL --no-group --no-stream --start='10m ago' --watch | jq .log
+}
+#+end_src
+
+** misc
+*** alfred
+#+begin_src sh
+# unset zle_bracketed_paste
+#+end_src
+*** alias convert_report
+#+begin_src sh
+alias convert_report="jq -r '([.resource_changes[].change.actions?]|flatten)|{\"create\":(map(select(.==\"create\"))|length),\"update\":(map(select(.==\"update\"))|length),\"delete\":(map(select(.==\"delete\"))|length)}'"
+#+end_src
+
+** Snippets
+:PROPERTIES:
+:header-args: :tangle (concat "./snippets/" (replace-regexp-in-string " " "_" (org-entry-get nil "ITEM")))
+:END:
+*** tab stop example
+#+begin_src sh
+#!/bin/zsh
+# example echo tab-stop
+echo "${msg1}" "${msg2}"
+#+end_src
+
+*** terraform
+**** tgplan
+#+begin_src sh :tangle no
+#!/bin/zsh
+# tgplan terraform terragrunt plan
+ export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+ # replace remote git to local git
+ export remote_git='ssh://git@git.uidev.tools/devops/devops.terraform.git'
+ export local_git=$devops_terraform_local_git
+ echo $local_git
+
+ cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+ # git grep -rli 'git@git.uidev.tools/devops/devops.terraform.git' * | xargs sed -i '' 's|ssh://git@git.uidev.tools/devops/devops.terraform.git|$GIT_MIRROR_PATH/devops.terraform.git|g'
+ git grep -rli $remote_git * | xargs sed -i '' "s|$remote_git|$local_git|g"
+ cd -
+ # end replace
+ # git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+ [ ! -f .terraform-version ] && echo "0.13.2.1" > .terraform-version
+
+ rm -rf .terragrunt-cache
+ echo "TG_SRC: $TG_SRC"
+ terragrunt plan --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt &&  terragrunt show --json --terragrunt-source $TG_SRC `pwd`/plan.out 2>/dev/null | jq -r '([.resource_changes[].change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' | tee CHANGES.JSON.txt
+ # rm -f .terraform-version
+ # replace back
+ cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+ git grep -rli $local_git * | xargs sed -i '' "s|$local_git|$remote_git|g"
+ cd -
+ # end replace
+
+#+end_src
+
+**** tgplan 01321
+#+begin_src sh
+#!/bin/zsh
+# tgplan terraform terragrunt plan
+ export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+ git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+ echo "0.13.2.1" > .terraform-version && rm -rf .terragrunt-cache
+ echo "TG_SRC: $TG_SRC"
+ terragrunt plan --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt &&  terragrunt show --json --terragrunt-source $TG_SRC `pwd`/plan.out 2>/dev/null | jq -r '([.resource_changes[].change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' | tee CHANGES.JSON.txt
+ # rm -f .terraform-version
+#+end_src
+
+**** tgplan2
+#+begin_src sh
+#!/bin/zsh
+# tgplan terraform terragrunt plan
+#export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -t|--worktree) ARG_WORKTREE="$2"; shift ;;
+    esac
+    shift
+done
+
+if [ -z "$ARG_WORKTREE" ]; then
+    WORKTREE=`ls $UID_TF_MODULES_BASE_PATH | fzf --query "$WORKTREE"`
+    if [ -z "$WORKTREE" ]; then
+        return false
+    fi
+else
+    WORKTREE=$ARG_WORKTREE
+fi
+
+export TG_SRC=$UID_TF_MODULES_BASE_PATH/$WORKTREE/product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+# replace remote git to local git
+export remote_git='ssh://git@git.uidev.tools/devops/devops.terraform.git'
+export local_git=$devops_terraform_local_git
+echo $local_git
+
+# cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+cd $TG_SRC
+# git grep -rli 'git@git.uidev.tools/devops/devops.terraform.git' * | xargs sed -i '' 's|ssh://git@git.uidev.tools/devops/devops.terraform.git|$GIT_MIRROR_PATH/devops.terraform.git|g'
+git grep -rli $remote_git * | xargs sed -i '' "s|$remote_git|$local_git|g"
+cd -
+# end replace
+# git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+[ ! -f .terraform-version ] && echo "0.13.2.1" > .terraform-version
+
+rm -rf .terragrunt-cache
+echo "TG_SRC: $TG_SRC"
+terragrunt plan --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt &&  terragrunt show --json --terragrunt-source $TG_SRC `pwd`/plan.out 2>/dev/null | jq -r '([.resource_changes[].change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' | tee CHANGES.JSON.txt
+# rm -f .terraform-version
+# replace back
+# cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+cd $TG_SRC
+git grep -rli $local_git * | xargs sed -i '' "s|$local_git|$remote_git|g"
+cd -
+# end replace
+
+#+end_src
+
+**** tgplan oidc whitelist
+#+begin_src sh
+#!/bin/zsh
+# terraform tgplan terragrunt plan
+ export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+ git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+ echo "0.12.26.2" > .terraform-version && rm -rf .terragrunt-cache
+ # terragrunt plan --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt
+ terragrunt plan -var-file=`pwd`/../whitelist.tfvars --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt
+#+end_src
+
+**** tgplan tmux
+#+begin_src sh :tangle no
+#!/bin/zsh
+# terraform tgplan terragrunt plan list
+#!/bin/bash
+set -e
+
+AWS_ENV=
+PR=
+FOR_LIST=
+APPLY=false
+
+if [ -n "$1" ]; then
+    AWS_ENV=$1
+    shift 1
+else
+    echo 'AWS_ENV is missing'
+    exit
+fi
+
+if [ -n "$1" ]; then
+    PR=$1
+    shift 1
+else
+    echo 'PR is missing'
+    exit
+fi
+
+if [ -n "$1" ]; then
+    FOR_LIST="$1"
+    shift 1
+else
+    echo 'FOR_LIST is missing'
+    exit
+fi
+
+# for arg; do
+#   case "$arg" in
+#     --apply ) APPLY=true ;;
+#   esac
+# done
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -t|--worktree) uid_worktree="$2"; shift ;;
+        -s|--tmux_session) tmux_session_name="$2"; shift ;;
+        --apply) APPLY=true ;;
+    esac
+    shift
+done
+
+
+echo $AWS_ENV
+echo $PR
+echo $APPLY
+echo $FOR_LIST
+echo $uid_worktree
+echo $tmux_session_name
+
+if [ -z $tmux_session_name ]; then
+    SESSION_NAME="PR${PR}_${AWS_ENV}"
+else
+    SESSION_NAME=$tmux_session_name
+fi
+
+echo "SESSION_NAME: $SESSION_NAME"
+
+if [ -n $uid_worktree ];then
+    TF_PATH=/Users/tru/Code/uidev-tf/${uid_worktree}/product-uid/infra/services/$AWS_ENV
+else
+    TF_PATH=/Users/tru/Code/uidev-tf/product-uid/infra/services/$AWS_ENV
+fi
+
+echo $TF_PATH
+
+chmod +x $snippets_dir/tgplan
+chmod +x $snippets_dir/tgapply
+
+#tmux has-session -t ${SESSION_NAME}
+# if [ $? != 0 ]
+if ! tmux has-session -t ${SESSION_NAME}
+then
+  # Create the session
+  tmux new-session -s ${SESSION_NAME} -n tf -d
+fi
+
+tmux attach -t ${SESSION_NAME} || true
+setopt shwordsplit
+for i in $FOR_LIST
+do
+    WINDOW_NAME=$(echo $i | sed 's#-#_#g' | sed 's#/#_#g')
+    if [ ! -z $tmux_session_name ]; then
+        WINDOW_NAME+="_${AWS_ENV}_${PR}"
+    fi
+
+    echo "tmux new-window -n ${WINDOW_NAME} -t ${SESSION_NAME}"
+    if ! tmux select-window -t ${SESSION_NAME}:${WINDOW_NAME}
+    then
+        echo "tmux new-window -n ${WINDOW_NAME} -t ${SESSION_NAME}"
+        tmux new-window -n ${WINDOW_NAME} -t ${SESSION_NAME}
+    fi
+
+    if [ $APPLY = 'false' ];then
+        echo 'plan'
+        # tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " echo 'hi'" C-m; sleep 0.5
+        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && zsh $snippets_dir/tgplan && date && cat CHANGES.JSON.txt | jq" C-m
+    fi
+
+    if [ $APPLY = 'true' ];then
+        echo 'apply'
+        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && zsh $snippets_dir/tgapply" C-m; sleep 1
+    fi
+    sleep 1
+done
+
+#+end_src
+
+#+RESULTS:
+: AWS_ENV is missing
+
+**** tgplan tmux2
+#+begin_src sh
+#!/bin/zsh
+# terraform tgplan terragrunt plan list
+#!/bin/bash
+set -e
+
+AWS_ENV=
+PR=
+FOR_LIST=
+APPLY=false
+
+if [ -n "$1" ]; then
+    AWS_ENV=$1
+    shift 1
+else
+    echo 'AWS_ENV is missing'
+    exit
+fi
+
+if [ -n "$1" ]; then
+    PR=$1
+    shift 1
+else
+    echo 'PR is missing'
+    exit
+fi
+
+if [ -n "$1" ]; then
+    FOR_LIST="$1"
+    shift 1
+else
+    echo 'FOR_LIST is missing'
+    exit
+fi
+
+# for arg; do
+#   case "$arg" in
+#     --apply ) APPLY=true ;;
+#   esac
+# done
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -t|--worktree) UID_WORKTREE="$2"; shift ;;
+        -s|--tmux_session) tmux_session_name="$2"; shift ;;
+        --apply) APPLY=true ;;
+    esac
+    shift
+done
+
+
+echo $AWS_ENV
+echo $PR
+echo $APPLY
+echo $FOR_LIST
+echo $UID_WORKTREE
+echo $tmux_session_name
+
+if [ -z $tmux_session_name ]; then
+    SESSION_NAME="PR${PR}_${AWS_ENV}"
+else
+    SESSION_NAME=$tmux_session_name
+fi
+
+echo "SESSION_NAME: $SESSION_NAME"
+
+if [ -n $UID_WORKTREE ];then
+    echo "Worktree: $UID_WORKTREE"
+else
+    echo 'Worktree is missing'
+    exit
+fi
+
+TF_PATH="$UID_TF_MODULES_BASE_PATH/product-uid/infra/services/$AWS_ENV"
+
+chmod +x $snippets_dir/tgplan2
+chmod +x $snippets_dir/tgapply2
+
+#tmux has-session -t ${SESSION_NAME}
+# if [ $? != 0 ]
+if ! tmux has-session -t ${SESSION_NAME}
+then
+  # Create the session
+  tmux new-session -s ${SESSION_NAME} -n tf -d
+fi
+
+tmux attach -t ${SESSION_NAME} || true
+setopt shwordsplit
+for i in $FOR_LIST
+do
+    WINDOW_NAME=$(echo $i | sed 's#-#_#g' | sed 's#/#_#g')
+    if [ ! -z $tmux_session_name ]; then
+        WINDOW_NAME+="_${AWS_ENV}_${PR}"
+    fi
+
+    echo "tmux new-window -n ${WINDOW_NAME} -t ${SESSION_NAME}"
+    if ! tmux select-window -t ${SESSION_NAME}:${WINDOW_NAME}
+    then
+        echo "tmux new-window -a -n ${WINDOW_NAME} -t ${SESSION_NAME}"
+        tmux new-window -a -n ${WINDOW_NAME} -t ${SESSION_NAME}
+    fi
+
+    if [ $APPLY = 'false' ];then
+        echo 'plan'
+        # tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} "  date && cd $TF_PATH/$i && echo 'hi'" C-m; sleep 0.5
+        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && zsh $snippets_dir/tgplan2 -t $UID_WORKTREE  && date && cat CHANGES.JSON.txt | jq" C-m
+    fi
+
+    if [ $APPLY = 'true' ];then
+        echo 'apply'
+        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && zsh $snippets_dir/tgapply2 -t $UID_WORKTREE" C-m; sleep 1
+    fi
+    sleep 1
+done
+
+#+end_src
+
+#+RESULTS:
+: AWS_ENV is missing
+
+**** tgplan tmux snippet
+#+begin_src sh
+#!/bin/zsh
+# ghe tgplan tmux snippet pr
+ setopt shwordsplit; chmod +x $snippets_dir/tgplan $snippets_dir/tgapply $snippets_dir/tgplan_tmux;
+#AWS_ENV=cell-proto;
+AWS_ENV=dogfooding;
+PR=1068;
+uid_worktree=dogfood
+
+FOR_LIST=$(gh pr diff $PR --repo ubiquiti-uid/uid.terraform-modules | grep 'diff' | awk -F 'b/' '{print $2}' | cut -d '/' -f 1,2 | sort | uniq | grep -v '\.' | tr '\n' ' ')
+
+zsh $snippets_dir/tgplan_tmux $AWS_ENV $PR "$FOR_LIST" -t $uid_worktree
+#+end_src
+
+**** tgapply
+#+begin_src sh :tangle no
+#!/bin/zsh
+# terraform tgapply terragrunt apply
+ export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+ # echo "0.12.26.2" > .terraform-version
+ terragrunt apply --terragrunt-source $TG_SRC plan.out 2>&1 | tee -a `pwd`/result-$(date +"%Y-%m-%d-%H-%M-%S").txt
+ # git -C $DEV_CONFIG_PATH/ssh apply -R uidev.local.patch
+ # git clean -e "version" -f
+ # rm -f .terraform-version
+#+end_src
+
+**** tgapply2
+#+begin_src sh
+#!/bin/zsh
+# terraform tgapply2 terragrunt apply
+# export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -t|--worktree) ARG_WORKTREE="$2"; shift ;;
+    esac
+    shift
+done
+
+if [ -z "$ARG_WORKTREE" ]; then
+    WORKTREE=`ls $UID_TF_MODULES_BASE_PATH | fzf --query "$WORKTREE"`
+    if [ -z "$WORKTREE" ]; then
+        return false
+    fi
+else
+    WORKTREE=$ARG_WORKTREE
+fi
+
+export TG_SRC=$UID_TF_MODULES_BASE_PATH/$WORKTREE/product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+
+# echo "0.12.26.2" > .terraform-version
+terragrunt apply --terragrunt-source $TG_SRC plan.out 2>&1 | tee -a `pwd`/result-$(date +"%Y-%m-%d-%H-%M-%S").txt
+# git -C $DEV_CONFIG_PATH/ssh apply -R uidev.local.patch
+# git clean -e "version" -f
+# rm -f .terraform-version
+#+end_src
+
+**** tfplan
+#+begin_src sh
+#!/bin/zsh
+# terraform review plan
+terraform init && terraform plan -out plan.out && terraform show plan.out > .plan-$(date +"%Y-%m-%d-%H-%M").txt
+#+end_src
+
+**** tfapply
+#+begin_src sh
+#!/bin/zsh
+# terraform review apply
+terraform apply plan.out 2>&1 | tee -a .result-$(date +"%Y-%m-%d-%H-%M").txt
+#+end_src
+
+**** tfplan and apply
+#+begin_src sh
+#!/bin/zsh
+# terraform plan and apply
+tfplan
+tfapply
+#+end_src
+
+*** git
+**** git log diff merges                                                     :noexport:
+#+begin_src sh :tangle no :results output silent
+#!/bin/zsh
+# git log diff merges dogfood
+ unset base; unset head
+ base=${base}; head=${head}
+ diff1=${base:-alpha}; diff2=${head:-dogfood}
+for i in $(git log --pretty=oneline --no-merges origin/$diff1..origin/$diff2 | awk '{print $1}' | xargs git describe --all --contains | cut -d"/" -f2 | cut -d"~" -f1 | sort | uniq); do git log --pretty=oneline --abbrev-commit --merges origin/$diff2 | grep "#$i" ;done
+#+end_src
+
+**** git diff name only
+#+begin_src sh
+#!/bin/zsh
+# git diff name-only
+base=${base}; head=${head}; diff1=${base:-alpha}; diff2=${head:-dogfood}
+git diff --name-only origin/${diff1} origin/${diff2} | cut -d '/' -f 1,2 | sort | uniq
+#+end_src
+
+**** git diff name only2                                                     :noexport:
+#+begin_src sh :tangle no :results output silent
+#!/bin/zsh
+# git diff name-only2
+ unset VAR1; unset VAR2
+ VAR1=${VAR1}; VAR2=${VAR2}
+ diff1=${VAR1:-alpha}
+ diff2=${VAR2:-dogfood}
+
+ for i in $(git log --pretty=oneline --no-merges origin/$diff1..origin/$diff2 | awk '{print $1}' | xargs git describe --all --contains | cut -d"/" -f2 | cut -d"~" -f1 | sort | uniq)
+ do
+    change_commits=$(git log --pretty=oneline --no-merges origin/$diff1..origin/$diff2 | awk '{print $1}' | xargs git describe --all --contains | sort)
+    num=$(echo -n "$change_commits" | grep -c $i | tr -d '[:space:]')
+    folder_name=$(git diff --name-only refs/pullreqs/$i~$num refs/pullreqs/$i | cut -d '/' -f 1,2 | sort | uniq)
+    echo -n "<details><summary>#$i Changed folders:</summary>"
+    echo -n "\n\n"
+    echo -n '```\n'
+    echo -n ${folder_name}
+    echo -n '\n```'
+    echo -n "\n\n"
+    echo -n "</details>\n\n"
+ done | pbcopy
+#+end_src
+
+**** git log history search
+#+begin_src sh
+#!/bin/zsh
+# git log history search
+git log -S '${string}' -p
+#+end_src
+
+**** git reset hard head to origin
+#+begin_src sh
+#!/bin/zsh
+# git reset hard from head to orgin
+git reset --hard @{u}
+#+end_src
+
+*** ghe
+**** ghe alpha release note
+#+begin_src shell
+#!/bin/zsh
+# ghe alpha release note git
+for pr in $(git log --pretty="%s" --merges origin/alpha..origin/dogfood | grep pull | cut -d' ' -f4 | cut -d'#' -f2 | sort -rn | uniq | tr '\n' ' ')
+do
+    curl -s -q -H "Authorization: token `pass show ghe_token`" -H "Accept: application/vnd.github.v3+json" "https://git.uidev.tools/api/v3/repos/ubiquiti-uid/uid.terraform-modules/pulls/$pr" | jq -r ' (["#\(.number)","`Label:\(.labels |  .[] | .name | select(contains("break")))`" ,"\(.title)"] | @tsv)'
+#+end_src
+
+**** ghe pull-request create to release office to alpha
+#+begin_src sh
+#!/bin/zsh
+# ghe create pull request pr release df to alpha
+ cd ~github.com/Ubiquiti-UID/PRs/`date -v +0d +'%Y-%m-%d'`
+for dir in `cat repo.txt | grep 'core'`
+do
+    echo "----------- $dir ----------------"
+    DAY2=`date -v +2d +'%Y-%m-%d'`
+    gh api -XPOST repos/ubiquiti-uid/$dir/pulls -f head=release-df -f base=release-ga-cell1 -f title="Release dogfood to GA (Alpha) - $DAY2" | jq -r '.html_url'
+
+    # curl -H "Authorization: token $(pass show ghe_token)" \
+    #     -X POST \
+    #     -H "Accept: application/vnd.github.v3+json" \
+    #     https://git.uidev.tools/api/v3/repos/ubiquiti-uid/$dir/pulls \
+    #     -d "{\"head\":\"release-df\",\"base\":\"release-ga-cell1\", \"title\":\"Release dogfood to GA (Alpha) - $DAY2\"}"  | jq -r '.html_url'
+
+
+done | tee -a `pwd`/result-$(date +"%Y-%m-%d-%H-%M-%S").txt
+#+end_src
+
+**** ghe list release pr by label
+#+begin_src sh
+#!/bin/zsh
+# ghe github release pr filter label
+ unset LABEL
+LABEL=$(gh api repos/{owner}/{repo}/labels --paginate --jq '.[] | .name' | fzf)
+if [ -z "$LABEL" ]; then
+    return false
+fi
+echo ${LABEL}
+
+JSON=$(curl -q -s -H "Authorization: token `pass show ghe_token`" -H "Accept: application/vnd.github.v3+json" "https://git.uidev.tools/api/v3/search/issues?q=org:unifi+repo:uid.terraform-module+label:$LABEL+is:pr&order=asc&sort=created")
+{
+echo "## no break change"
+# https://unix.stackexchange.com/questions/588458/how-to-remove-last-character-with-slash-in-unix
+echo -n $JSON | sed 's|\\[^\]*$||' | tr '\r\n' ' ' | jq -r '.items[] | select( .labels | .[] | .name | contains("no-break-change")) | (["- [ ]" , "#\(.number)","\(.title)"] | @tsv)'
+echo "#### changed folders:"
+NO_BREAK=$(echo -n $JSON | sed 's|\\[^\]*$||' | tr '\r\n' ' ' | jq -r '.items[] | select( .labels | .[] | .name | contains("no-break-change")) | .number')
+for i in `echo -n $NO_BREAK`
+do
+    echo -n "<details><summary>#$i Changed folders:</summary>"
+    echo -n "\n\n"
+    echo -n '```\n'
+    curl -s -q -H "Authorization: token `pass show ghe_token`" -H "Accept: application/vnd.github.v3.diff" https://git.uidev.tools/api/v3/repos/ubiquiti-uid/uid.terraform-modules/pulls/$i | grep 'diff' | awk -F 'b/' '{print $2}' | cut -d '/' -f 1,2 | sort | uniq
+    echo -n '\n```'
+    echo -n "\n\n"
+    echo -n "</details>\n\n"
+done
+
+echo "## has break change"
+echo -n $JSON | sed 's|\\[^\]*$||' | tr '\r\n' ' ' | jq -r '.items[] | select( .labels | .[] | .name | contains("has-break-change")) | (["- [ ]", "#\(.number)","\(.title)"] | @tsv)'
+echo "#### changed folders:"
+HAS_BREAK=$(echo -n $JSON | sed 's|\\[^\]*$||' | tr '\r\n' ' ' | jq -r '.items[] | select( .labels | .[] | .name | contains("has-break-change")) | .number')
+for i in `echo -n $HAS_BREAK`
+do
+    echo -n "<details><summary>#$i Changed folders:</summary>"
+    echo -n "\n\n"
+    echo -n '```\n'
+    curl -s -q -H "Authorization: token `pass show ghe_token`" -H "Accept: application/vnd.github.v3.diff" https://git.uidev.tools/api/v3/repos/ubiquiti-uid/uid.terraform-modules/pulls/$i | grep 'diff' | awk -F 'b/' '{print $2}' | cut -d '/' -f 1,2 | sort | uniq
+    echo -n '\n```'
+    echo -n "\n\n"
+    echo -n "</details>\n\n"
+done
+} | pbcopy
+#+end_src
+
+**** ghe merge approved prs
+#+begin_src sh
+#!/bin/zsh
+# ghe merge approved PRs
+[ -z "$GITHUB_TOKEN" ] && export GITHUB_TOKEN=`pass show gh_token`
+for i in $(hub pr list | fzf -m | awk '{print $1}' | cut -c 2-)
+do
+echo $i
+# curl -s -q -X PUT -H "Authorization: token `pass show ghe_token`" -H "Accept: application/vnd.github.v3+json" "https://git.uidev.tools/api/v3/repos/ubiquiti-uid/uid.terraform-modules/pulls/$i/merge" | tee -a result.txt
+done
+#+end_src
+
+**** hub pr merge
+#+begin_src sh
+#!/bin/zsh
+# hub pr merge num
+[ -z "$GITHUB_TOKEN" ] && export GITHUB_TOKEN=`pass show gh_token`
+pr_list=$(hub pr list | fzf -m | awk '{print $1}' | cut -c 2-)
+for i in `echo ${pr_list}`
+do
+    hub merge `hub pr show -u $i`
+done
+#+end_src
+
+**** hub api issue pr comment and add label
+#+begin_src sh
+#!/bin/zsh
+# ghe post hub api pr issue comment add label
+# hub api repos/{owner}/{repo}/issues/${id}/comments -f body="${ThisIsMyComment}" | jq -r '.html_url'
+# hub api repos/ubiquiti-uid/uid.terraform-modules/issues/850/comments -f body="$comments" | jq -r '.html_url'
+tmp_PR=${PR}
+export PR=
+echo -n "Enter PR num [current: $tmp_PR]: "; read PR
+export PR=${PR:-${tmp_PR}}
+
+chmod +x $snippets_dir/get_ghe_pr_comment_without_paste
+$snippets_dir/get_ghe_pr_comment_without_paste
+pwd
+#git -C '$DEV_CONFIG_PATH/ssh' apply -R uidev.local.patch || true
+comments=`cat echo.tmp`
+gh api repos/ubiquiti-uid/uid.terraform-modules/issues/$PR/comments -f body="$comments" | jq -r '.html_url'
+echo ""
+
+tmp_PR=${PR}
+export PR=
+echo -n "Enter PR num [current: $tmp_PR]: "; read PR
+export PR=${PR:-${tmp_PR}}
+label=$(gh api repos/{owner}/uid.terraform-modules/labels --paginate --jq '.[] | .name' | fzf)
+if [ -n "$label" ]; then
+    echo $label
+    gh pr edit $PR --repo ubiquiti-uid/uid.terraform-modules --add-label $label
+fi
+#+end_src
+
+**** ghe gh add terraform module label
+#+begin_src sh
+#!/bin/zsh
+# ghe gh api add terraform module label
+tmp_PR=${PR}
+export PR=
+echo -n "Enter PR num [current: $tmp_PR]: "; read PR
+export PR=${PR:-${tmp_PR}}
+label=$(gh api repos/{owner}/uid.terraform-modules/labels --paginate --jq '.[] | .name' | fzf)
+if [ -n "$label" ]; then
+    echo $label
+    gh pr edit $PR --repo ubiquiti-uid/uid.terraform-modules --add-label $label
+fi
+#+end_src
+
+**** hub api list collaborators
+#+begin_src sh
+#!/bin/zsh
+# hub api list collaborators
+[ -z "$GITHUB_TOKEN" ] && export GITHUB_TOKEN=`pass show gh_token`
+hub api repos/:user/:repo/collaborators | jq ".[].login"
+#+end_src
+**** get ghe pr comment
+#+begin_src sh
+#!/bin/zsh
+# github ghe get pr comment
+    SERVICE=$(basename $(dirname $PWD))/$(basename $PWD)
+    AWS_ENVS=$(basename $(cd ../../ && pwd))
+
+    PLAN=$(ls -tl plan*.txt | head -n 1 | awk '{print $NF}')
+    RESULT=$(ls -tl result*.txt | head -n 1 | awk '{print $NF}')
+
+    # remove ansi color
+    read -r -d '' detail1 << EOM
+$(cat $PLAN | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g')
+EOM
+
+    # remove ansi color
+    read -r -d '' detail2 << EOM
+$(cat $RESULT | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g')
+EOM
+
+    if echo "$detail2" | grep -n 'Outputs:' >> /dev/null ; then
+        output_line=$(echo "$detail2" | grep -n 'Outputs:' | cut -f1 -d:)
+        line=$(expr $output_line - 1)
+    else
+        line='$'
+    fi
+
+    echo "<details><summary>$AWS_ENVS/$SERVICE</summary>" > echo.tmp
+    echo "\n" >> echo.tmp
+    echo '```' >> echo.tmp
+    cat $PLAN | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g' >> echo.tmp
+    cat $RESULT | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g' | sed -n "1,${line}p" >> echo.tmp
+    echo '```' >> echo.tmp
+    echo "\n" >> echo.tmp
+    echo "</details>" >> echo.tmp
+
+    cat echo.tmp | pbcopy
+    rm -f echo.tmp
+#+end_src
+
+**** get ghe pr comment without paste
+#+begin_src sh
+#!/bin/zsh
+# github ghe get pr comment
+    SERVICE=$(basename $(dirname $PWD))/$(basename $PWD)
+    AWS_ENVS=$(basename $(cd ../../ && pwd))
+
+    PLAN=$(ls -tl plan*.txt | head -n 1 | awk '{print $NF}')
+    RESULT=$(ls -tl result*.txt | head -n 1 | awk '{print $NF}')
+
+    # remove ansi color
+    read -r -d '' detail1 << EOM
+$(cat $PLAN | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g')
+EOM
+
+    # remove ansi color
+    read -r -d '' detail2 << EOM
+$(cat $RESULT | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g')
+EOM
+
+    if echo "$detail2" | grep -n 'Outputs:' >> /dev/null ; then
+        output_line=$(echo "$detail2" | grep -n 'Outputs:' | cut -f1 -d:)
+        line=$(expr $output_line - 1)
+    else
+        line='$'
+    fi
+
+    echo "<details><summary>$AWS_ENVS/$SERVICE</summary>" > echo.tmp
+    echo "\n" >> echo.tmp
+    echo '```' >> echo.tmp
+    cat $PLAN | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g' >> echo.tmp
+    cat $RESULT | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g' | sed -n "1,${line}p" >> echo.tmp
+    echo '```' >> echo.tmp
+    echo "\n" >> echo.tmp
+    echo "</details>" >> echo.tmp
+
+#    cat echo.tmp | pbcopy
+#    rm -f echo.tmp
+#+end_src
+
+**** ghe api stop webhook
+#+begin_src shell
+#!/bin/zsh
+# ghe api stop web hook
+tmp_SEARCH_Q=${SEARCH_Q}
+export SEARCH_Q=
+echo -n "Enter SEARCH_Q num [current: $tmp_SEARCH_Q]: "; read SEARCH_Q
+export SEARCH_Q=${SEARCH_Q:-${tmp_SEARCH_Q}}
+
+if [[ -z $SEARCH_Q ]]; then
+    return false
+fi
+
+REPO=$(gh api -XGET "/search/repositories" -f q=$SEARCH_Q --jq '.items.[].name' | fzf)
+if [[ -z $REPO ]]; then
+    return false
+fi
+
+echo $REPO
+
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [[ ! $continue = "yes" ]]; then
+    echo "no"
+    return
+fi
+echo $continue
+
+setopt shwordsplit
+HOOK_IDS=$(gh api -XGET repos/ubiquiti-uid/$REPO/hooks | jq -r '.[] | .id')
+echo $HOOK_IDS
+for HOOK_ID in $HOOK_IDS; do
+    echo "gh api -XPATCH repos/ubiquiti-uid/$REPO/hooks/$HOOK_ID -F active=false --jq '{ id, active }'"
+    gh api -XPATCH repos/ubiquiti-uid/$REPO/hooks/$HOOK_ID -F active=false --jq '{ id, active }'
+done
+unsetopt shwordsplit
+#+end_src
+
+**** ghe api enable webhook
+#+begin_src shell
+#!/bin/zsh
+# ghe api enable web hook
+tmp_SEARCH_Q=${SEARCH_Q}
+export SEARCH_Q=
+echo -n "Enter SEARCH_Q num [current: $tmp_SEARCH_Q]: "; read SEARCH_Q
+export SEARCH_Q=${SEARCH_Q:-${tmp_SEARCH_Q}}
+
+if [[ -z $SEARCH_Q ]]; then
+    return false
+fi
+
+REPO=$(gh api -XGET "/search/repositories" -f q=$SEARCH_Q --jq '.items.[].name' | fzf)
+if [[ -z $REPO ]]; then
+    return false
+fi
+
+echo $REPO
+
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [[ ! $continue = "yes" ]]; then
+    echo "no"
+    return
+fi
+echo $continue
+
+setopt shwordsplit
+HOOK_IDS=$(gh api -XGET repos/ubiquiti-uid/$REPO/hooks | jq -r '.[] | .id')
+echo $HOOK_IDS
+for HOOK_ID in $HOOK_IDS; do
+    echo "gh api -XPATCH repos/ubiquiti-uid/$REPO/hooks/$HOOK_ID -F active=true --jq '{ id, active }'"
+    gh api -XPATCH repos/ubiquiti-uid/$REPO/hooks/$HOOK_ID -F active=true --jq '{ id, active }'
+done
+unsetopt shwordsplit
+#+end_src
+
+**** ghe release branch organization
+#+begin_src shell
+#!/bin/zsh
+# ghe release branch organization aws codepipeline sha hash
+# REPO='uid.workflow'
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+
+REPO=`awk -F', ' '{print $1}' $CSV | fzf`
+PIPELINE_PREFIX='cell-qa'
+TARGET_BRANCH='release-ga-cell1'
+
+CSV='$MY_ORG_PATH/uid/daily/codepipeline-zip-hash/repo-pipeline.csv'
+PIPELINE="$PIPELINE_PREFIX-`awk -F', ' -v REPO="$REPO" '$1 == REPO { print $2; exit }' $CSV`"
+
+echo $PIPELINE
+
+dir="/tmp/commit_id"
+if [[ -d "$dir" ]];then
+  rm -rf $dir
+fi
+mkdir -p $dir
+
+aws s3 cp $s3_url $dir/$zipname > /dev/null 2>&1
+exec_id=`aws codepipeline list-pipeline-executions --pipeline-name $PIPELINE | jq -r '(.pipelineExecutionSummaries | map( .startTime ) | max) as $MAX_STARTTIME | .pipelineExecutionSummaries[] | select( .startTime == $MAX_STARTTIME) | .pipelineExecutionId '`
+# echo $exec_id
+
+s3_url=`aws codepipeline list-action-executions --pipeline-name $PIPELINE --filter pipelineExecutionId=$exec_id | jq -r '.actionExecutionDetails|.[] | select(.stageName=="WebHook")|.input.configuration|. as {S3Bucket:$bucket,S3ObjectKey:$obj}| "s3://"+$bucket+"/"+$obj'`
+# echo $s3_url
+
+zipname="${PIPELINE}-`basename $s3_url`"
+#echo $zipname
+
+aws s3 cp $s3_url $dir/$zipname > /dev/null 2>&1
+unzip $dir/$zipname -d $dir/$PIPELINE > /dev/null 2>&1
+# cat $dir/$PIPELINE/hook.json | jq -r --arg PIPELINE "$PIPELINE" '(.head_commit.id) as $id | (.repository.name ) as $name | $name+", "+$PIPELINE+", "+$id '
+BASE_SHA=`cat $dir/$PIPELINE/hook.json | jq -r --arg PIPELINE "$PIPELINE" '(.head_commit.id) as $id | (.repository.name ) as $name | $id '`
+
+echo "\n\n"
+echo "\e[0;33m#########################"
+echo "# $REPO"
+echo "#########################\e[0m"
+
+TARGET_BRANCH_SHA=`gh api -XGET repos/unifi/$REPO/git/ref/heads/$TARGET_BRANCH --jq '.object.sha'` > /dev/null 2>&1
+
+if [[ $BASE_SHA == $TARGET_BRANCH_SHA ]]; then
+    echo "codepipeline commit id = $TARGET_BRANCH commit id"
+    return
+fi
+
+#+end_src
+
+**** ghe get commit id from aws codepipeline zip file
+#+begin_src shell
+#!/bin/zsh
+# ghe branch  get commit id from aws codepipeline zip file
+#setopt shwordsplit
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+
+dir="/tmp/commit_id"
+if [[ -d "$dir" ]];then
+  rm -rf $dir
+fi
+mkdir -p $dir
+
+service=`aws codepipeline list-pipelines | jq -r '.[] | .[] | .name' | grep -vE 'ssm|release|www' | fzf`
+
+constants=$(aws codepipeline list-pipeline-executions --pipeline-name $service | jq -r '(.pipelineExecutionSummaries | map( .startTime ) | max) as $MAX_STARTTIME | .pipelineExecutionSummaries[] | select( .startTime == $MAX_STARTTIME) | {pipelineExecutionId, pipelineStatus:.status, startTime}| to_entries | .[] | .key + "=" + (.value | @sh)')
+
+
+for key in ${constants}; do
+  eval ${key}
+done
+
+exec_id=${pipelineExecutionId}
+s3_url=`aws codepipeline list-action-executions --pipeline-name $service --filter pipelineExecutionId=$exec_id | jq -r '.actionExecutionDetails|.[] | select(.stageName=="WebHook")|.input.configuration|. as {S3Bucket:$bucket,S3ObjectKey:$obj}| "s3://"+$bucket+"/"+$obj'`
+zipname="${service}-`basename $s3_url`"
+aws s3 cp $s3_url $dir/$zipname > /dev/null 2>&1
+
+unzip $dir/$zipname -d $dir/$service > /dev/null 2>&1
+    # cat $dir/$service/hook.json | jq -r '.|.head_commit|. as {id:$id}| ""'
+    # cat $dir/$service/hook.json | jq -r --arg service "$service" '.|.head_commit|. as {id:$id} | $service+" commit id is "+$id'
+cat $dir/$service/hook.json | jq -r --arg service "$service" '(.head_commit.id) as $id | (.repository.name ) as $name             | $name+", "+$service+", "+$id '
+
+
+#+end_src
+
+**** ghe pr diff folder
+#+begin_src shell
+#!/bin/zsh
+# ghe pr diff folder
+gh pr diff ${PR} --repo ubiquiti-uid/uid.terraform-modules | grep 'diff' | awk -F 'b/' '{print $2}' | cut -d '/' -f 1,2 | sort | uniq | grep -v '\.'
+#+end_src
+
+**** gh set default branch
+#+begin_src shell
+#!/bin/zsh
+# gh set default branch
+REPO=`gh api -XGET "orgs/ubiquiti-uid/repos" --paginate | jq -r '.[] | .name' | fzf` && echo "gh repo edit ubiquiti-uid/$REPO --default-branch `gh api -XGET --paginate "repos/ubiquiti-uid/$REPO/branches" | jq -r '.[] | .name' | fzf`" | tee /dev/tty | zsh
+#+end_src
+
+**** gh issue search filter today involves
+#+begin_src shell
+#!/bin/zsh
+# gh issue list
+read -r -d '' cmd_gh << EOM
+gh issue list --repo "Ubiquiti-UID/uid.devops-pandora" -s all -S "is:issue sort:updated-desc comments:>0 updated:>=$(date -v -0d +'%Y-%m-%d') involves:`gh api repos/Ubiquiti-UID/uid.devops-pandora/collaborators --paginate --jq '.[] | .login' | fzf`" # wiki in:comments,body,title " # -a "@me"
+EOM
+echo $cmd_gh | tee /dev/tty | zsh
+#+end_src
+
+**** gh issue has new comments
+#+begin_src shell
+#!/bin/zsh
+# gh issue list new comments
+gh issue list --repo "Ubiquiti-UID/uid.devops-pandora" -s open -S "is:issue sort:updated-desc comments:>0 updated:>=$(date -v -1d +'%Y-%m-%d') involves:@me" --json title,url,comments,number \
+  | jq -r '.[]
+          | { title, number, url, new_comment: (.comments | max_by(.createdAt) | select(.author.login!="tru2dagame")) }
+          | "########", "\(.url)", "\u001b[32m\(.title)\u001b[0m", "\(.new_comment.author.login):", " ", "\(.new_comment.body | .[0:200])"'
+#+end_src
+*** ssh config patch
+#+begin_src shell
+#!/bin/zsh
+# ssh config local patch
+git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+#+end_src
+
+*** ssh config unpatch
+#+begin_src shell
+#!/bin/zsh
+# ssh config local unpatch
+git -C '$DEV_CONFIG_PATH/ssh' apply -R uidev.local.patch
+#+end_src
+
+*** gitea up
+#+begin_src shell
+#!/bin/zsh
+# gitea docker-compose up
+ttab -a iTerm2 -G -d $MY_DOCKER_PATH/gitea 'docker-compose up'
+#+end_src
+
+*** aws
+**** aws waf
+#+begin_src sh
+#!/bin/zsh
+# aws waf awscli prd-ubntcom ratelimit
+# ubntcom
+# aws wafv2 get-rate-based-statement-managed-keys --scope=REGIONAL --region=us-west-2 --web-acl-name=prd-ubntcom --web-acl-id=f28c37a1-3760-49a0-aa31-96530bc3477e --rule-name=ratelimit
+# qa
+aws wafv2 get-rate-based-statement-managed-keys --scope=CLOUDFRONT --region=us-east-1 --web-acl-name=qa-api-gw --web-acl-id=8b7dd129-2be4-4342-acf3-6b1703a091ab --rule-name=qa-api-gw-acl-rule
+# dogfood
+aws wafv2 get-rate-based-statement-managed-keys --scope=CLOUDFRONT --region=us-east-1 --web-acl-name=dogfood-api-gw --web-acl-id=5df239b5-794f-45cc-bfd8-96156f07ddf8 --rule-name=dogfood-api-gw-acl-rule
+#+end_src
+
+**** aws codepipeline restart
+#+begin_src sh
+#!/bin/zsh
+# aws codepipeline execution restart
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+# export AWS_REGION=us-west-2
+
+name=`aws codepipeline list-pipelines | jq -r '.pipelines | .[] | .name' | fzf -m`
+print $name
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [ $continue = "yes" ]; then
+    echo "\nRestarting..."
+    for i in `echo $name`
+    do
+        echo $i
+        echo "aws codepipeline start-pipeline-execution --name $i" | tee /dev/tty | zsh
+    done
+fi
+
+
+#+end_src
+
+**** aws codepipeline list-pipeline-executions
+#+begin_src sh
+#!/bin/zsh
+# aws codepipeline list-pipeline-executions status
+# tmp_profile=${AWS_PROFILE}
+# tmp_region=${AWS_REGION}
+# export AWS_PROFILE=
+# export AWS_REGION=
+# echo -n "Enter AWS REGION [current: $tmp_region]: "; read AWS_REGION
+# export AWS_REGION=${AWS_REGION:-${tmp_region}}
+
+# echo -n "Enter AWS PROFILE NAME [current: $tmp_profile]: "; read AWS_PROFILE
+# export AWS_PROFILE=${AWS_PROFILE:-${tmp_profile}}
+source $HOME/.oh-my-zsh/custom/plugins/h/h.sh
+
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+
+export H_COLORS_BG="underline bold green"
+export H_COLORS_FG="bold black on_red","bold black on_blue"
+list=$(aws codepipeline list-pipelines | jq -r '.pipelines | .[] | .name' | fzf -m)
+rm -f /tmp/aws_codepipeline_state.tmp
+while [ true ]
+do
+    j=0
+    for name in `echo -n $list`
+    do
+        # zsh/bash for loop issue
+        # https://stackoverflow.com/questions/23157613/how-to-iterate-through-string-one-word-at-a-time-in-zsh
+        if [[ ! -o shwordsplit ]]; then
+            old_shwordsplit='no'
+            setopt shwordsplit
+        fi
+
+        # aws codepipeline list-pipeline-executions --pipeline-name $name --max-items 1 | jq -r '(["\(.pipelineExecutionSummaries | .[] | .status)","\(.pipelineExecutionSummaries | .[] | .lastUpdateTime)", "\('\"$name\"')"] | @tsv)'
+        aws codepipeline get-pipeline-state --name $name | jq -r '{ pipelineName,
+                         stageName: (.stageStates | map(.stageName, .latestExecution.status)),
+                         lastUpdate: (.stageStates |  map(.actionStates | .[] | .latestExecution.lastStatusChange) | max)}
+                         | flatten | join(", ") ' | h -i 'cancelled|failed|stopped|stopping' 'inprogress' "succeeded|$(date -v -0d +"%Y-%m-%d").*" | tee -a /tmp/aws_codepipeline_state.tmp
+        # Cancelled | InProgress | Failed | Stopped | Stopping | Succeeded
+        ((j+=1))
+        if [ $old_shwordsplit = 'no' ];then
+            unsetopt shwordsplit
+        fi
+    done
+    for i in $(seq 1 $j); do tput cuu1; done
+    sleep 5
+done
+
+#+end_src
+
+**** aws update-service desired-count
+#+begin_src sh
+#!/bin/zsh
+# aws ecs update service desired count
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+echo $AWS_PROFILE
+# export AWS_REGION=us-west-2
+
+#app=${app}
+#name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | select( .name | contains("-'$app'")) | .name'`
+#name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | .name' | fzf -m -e`
+name=`aws ecs list-clusters | jq -r '.clusterArns | .[]' | awk -F ':' '{print $6}' | cut -d'/' -f 2 | fzf -m -e`
+ecs="name\tdesiredCount\tpendingCount\trunningCount\n"
+for i in `echo $name`; do
+    ecs+=`aws ecs describe-services --cluster $i --services $i | jq -r '(.services | .[] | { serviceName, desiredCount: (.desiredCount), pendingCount: (.pendingCount), runningCount: (.runningCount) } | flatten) | @tsv'`"\n"
+done
+echo $ecs | column -s $'\t' -t
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [ $continue = "yes" ]; then
+    echo "\nContinue...\n"
+    echo -n "\nHow Many Desired Count Number: "; read num
+    if [ -n $num ]; then
+        for i in `echo $name`
+        do
+            aws ecs update-service --cluster $i --service $i --desired-count $num | jq -r '.service | { serviceName, desiredCount: (.desiredCount), pendingCount: (.pendingCount), runningCount: (.runningCount) }'
+        done
+    fi
+fi
+#+end_src
+
+**** aws application-autoscaling describe-scalable-targets
+#+begin_src sh
+#!/bin/zsh
+# aws application-autoscaling describe-scalable-targets
+name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | .name' | fzf -m -e`
+echo $name
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [ ! $continue = "yes" ]; then
+    return
+fi
+for i in `echo $name`; do
+    aws application-autoscaling describe-scalable-targets --service-namespace ecs --resource-id service/$i/$i/
+done
+ #+end_src
+
+**** aws application-autoscaling register-scalable-target                    :noexport:
+#+begin_src sh :tangle no :results output silent
+#!/bin/zsh
+# aws application-autoscaling register-scalable-target ecs desiredcount
+name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | .name' | fzf -m -e`
+echo $name
+
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [ $continue = "yes" ]; then
+    echo "\nContinue...\n"
+    for i in `echo $name`
+    do
+        aws application-autoscaling register-scalable-target \
+            --service-namespace ecs \
+            --scalable-dimension ecs:service:DesiredCount \
+            --resource-id service/$i/$i/ \
+            --min-capacity 2 \
+            --max-capacity 2
+    done
+fi
+#+end_src
+
+**** aws ecs enable containerInsights
+#+begin_src sh
+#!/bin/zsh
+# aws ecs enable containerInsights
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+export AWS_REGION=us-west-2
+app=${app}
+name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | select( .name | contains("-'$app'")) | .name'`
+echo $name
+# aws ecs update-cluster-settings --cluster $name --settings name=containerInsights,value=enabled
+#+end_src
+
+**** aws get secrets
+#+begin_src sh
+#!/bin/zsh
+# aws get secrets sm
+echo -n "Enter search: "; read search
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+read -r -d '' CMD1 << EOM
+aws secretsmanager get-secret-value --secret-id $(aws secretsmanager list-secrets --filters '[{"Key": "all", "Values": ["'${search}'"]}]' | jq -r ".SecretList | .[].Name" | fzf) | jq -r ".SecretString"
+EOM
+echo $CMD1 | tee /dev/tty | zsh
+#+end_src
+
+**** aws set secrets
+#+begin_src sh
+#!/bin/zsh
+# aws put set secrets
+aws secretsmanager put-secret-value --secret-id ${name} --secret-string "${value}"
+#+end_src
+
+**** aws delete secrets force without recovery
+#+begin_src sh
+#!/bin/zsh
+# aws secrets delete force-delete-without-recovery
+aws secretsmanager delete-secret --secret-id  ${name} --force-delete-without-recovery
+#+end_src
+
+**** aws clear envs
+#+begin_src sh
+#!/bin/zsh
+# aws clear envs
+export AWS_PROFILE=
+export AWS_ACCESS_KEY_ID=
+export AWS_SECRET_ACCESS_KEY=
+export AWS_DEFAULT_REGION=us-west-2
+export AWS_REGION=
+#+end_src
+
+**** aws shared bastion
+#+begin_src sh
+#!/bin/zsh
+# aws shared bastion ssh
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"` && echo $AWS_PROFILE && echo "ssh root@`aws ec2 describe-instances --filters 'Name=tag:Name,Values=shared-bastion' | jq -r  '.Reservations[].Instances[].InstanceId'`"
+#+end_src
+
+**** aws shared bastion forward rds connect
+#+begin_src sh
+#!/bin/zsh
+# aws shared bastion forward rds connect
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+echo $AWS_PROFILE
+FZF_RDS=$(aws secretsmanager list-secrets --filters '[{"Key": "all", "Values": ["database"]}]' | jq -r ".SecretList | .[].Name" | fzf)
+if [ -z "$FZF_RDS" ]; then
+    return false
+fi
+RDS=$(aws secretsmanager get-secret-value --secret-id $FZF_RDS | jq -r ".SecretString")
+echo $RDS | jq
+echo $RDS | jq -r ".dbname" | tr -d "\n" | pbcopy; sleep 1
+echo $RDS | jq -r ".host" | tr -d "\n" | pbcopy; sleep 1
+echo $RDS | jq -r ".username" | tr -d "\n" | pbcopy; sleep 1
+echo $RDS | jq -r ".password" | tr -d "\n" | pbcopy; sleep 1
+ssh -vvv root@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=shared-bastion" | jq -r  ".Reservations[].Instances[].InstanceId") -N -L 3306:$(echo $RDS | jq -r ".host"):3306
+#+end_src
+
+*** uicli login uid aws
+#+begin_src sh
+#!/bin/zsh
+# uicli aws login
+uicli aws `cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"` login
+#+end_src
+
+*** terraform init repo-privilege s3 backend
+#+begin_src sh
+#!/bin/zsh
+# tf terraform init repo-privilege s3 backend
+terraform init \
+-backend-config="bucket=302341155122-deploy" \
+-backend-config="profile=admin@uid-core-dogfooding" \
+-backend-config="key=repo-privilege/$(basename $PWD)/terraform.tfstate" \
+-backend-config="region=us-west-2" \
+-backend-config="shared_credentials_file=~/.aws/credentials"
+#+end_src
+
+*** legacy shared bastion
+#+begin_src sh
+#!/bin/zsh
+# legacy shared bastion
+ssh -NL localhost:3333:prd-vlognowapi.cofgz3dkwy4s.us-west-2.rds.amazonaws.com:3306 tru.zhou@54.190.180.174
+#+end_src
+
+*** find example
+#+begin_src sh
+#!/bin/zsh
+# find example not-path
+# find . -type f \( -iname "*.tf"  \) -not -path "./modules/*" -not -path "./test*" -not -path "./collaborators*" -exec grep --files-without-match 'frank' \{\} +
+find . -type f \( -iname "${name}"  \) -not -path "${path}*" -exec grep --files-without-match '${match}' \{\} +
+
+#+end_src
+
+*** mac custom ip route
+#+begin_src sh
+#!/bin/zsh
+# mac office ip route
+sudo route add -net 10.8.8.0 -netmask 255.255.255.0 10.100.2.4
+#+end_src
+
+*** letsencrypt certbot
+#+begin_src sh
+#!/bin/zsh
+# letsencrypt certbot ssl
+unset domain
+echo -n "Enter your domain here [tru.dev]:"; read domain
+echo ${domain:-tru.dev}
+pass show cloudflare > cf.ini
+docker run -i --rm --name certbot -v `pwd`/ssl:/etc/letsencrypt -v \
+      `pwd`/cf.ini:/home/ssl/dns_api/cf.ini \
+      certbot/dns-cloudflare:v1.14.0 certonly \
+      --force-renewal \
+      --register-unsafely-without-email \
+      --agree-tos  --preferred-challenges dns \
+      --server https://acme-v02.api.letsencrypt.org/directory \
+      --dns-cloudflare \
+      --dns-cloudflare-credentials /home/ssl/dns_api/cf.ini \
+      --dns-cloudflare-propagation-seconds 30 \
+      -d $domain -d "*.$domain"
+rm -f cf.ini
+#+end_src
+
+*** fzf kill ps
+#+begin_src sh
+#!/bin/zsh
+# fzf kill ps
+ps -ef | sed 1d | fzf -e -m | awk '{print $2}' | xargs kill -${1:-9}
+#+end_src
+
+*** iftop port
+#+begin_src sh
+#!/bin/zsh
+# iftop port
+iftop -i ens1f1 -PnN -f "port 1234"
+#+end_src
+
+*** emacs open tf module
+#+begin_src sh
+#!/bin/zsh
+# emacs open terraform module from terragrunt folder
+if [ -z "$ARG_WORKTREE" ]; then
+    WORKTREE=`ls $UID_TF_MODULES_BASE_PATH | fzf --query "$WORKTREE"`
+    if [ -z "$WORKTREE" ]; then
+        return false
+    fi
+else
+    WORKTREE=$ARG_WORKTREE
+fi
+cd ../../../../../../${WORKTREE}/product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD) && rgf && cd -
+#+end_src
+
+*** silicon screenshot
+#+begin_src sh
+#!/bin/zsh
+# silicon screenshot code clipboard
+silicon -l ${lang} --no-line-number --from-clipboard --to-clipboard --shadow-color '#555' --background '#fff' --shadow-blur-radius 30
+#+end_src
+
+*** ffmpeg download m3u8 to mp4
+#+begin_src sh
+#!/bin/zsh
+# ffmpeg m3u8 to mp4
+ffmpeg -i ${m3u8} -c copy -bsf:a aac_adtstoasc output.mp4
+#+end_src
+
+*** print all the color
+#+begin_src sh
+#!/bin/zsh
+# print all ansi color
+for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done
+#+end_src
+
+* Local Variables                                                               :noexport:
+# Local Variables:
+# eval: (add-hook 'after-save-hook (lambda ()(org-babel-tangle)) nil t)
+# End:

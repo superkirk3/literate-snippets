@@ -1,0 +1,29 @@
+#!/bin/zsh
+# ghe branch  get commit id from aws codepipeline zip file
+#setopt shwordsplit
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+
+dir="/tmp/commit_id"
+if [[ -d "$dir" ]];then
+  rm -rf $dir
+fi
+mkdir -p $dir
+
+service=`aws codepipeline list-pipelines | jq -r '.[] | .[] | .name' | grep -vE 'ssm|release|www' | fzf`
+
+constants=$(aws codepipeline list-pipeline-executions --pipeline-name $service | jq -r '(.pipelineExecutionSummaries | map( .startTime ) | max) as $MAX_STARTTIME | .pipelineExecutionSummaries[] | select( .startTime == $MAX_STARTTIME) | {pipelineExecutionId, pipelineStatus:.status, startTime}| to_entries | .[] | .key + "=" + (.value | @sh)')
+
+
+for key in ${constants}; do
+  eval ${key}
+done
+
+exec_id=${pipelineExecutionId}
+s3_url=`aws codepipeline list-action-executions --pipeline-name $service --filter pipelineExecutionId=$exec_id | jq -r '.actionExecutionDetails|.[] | select(.stageName=="WebHook")|.input.configuration|. as {S3Bucket:$bucket,S3ObjectKey:$obj}| "s3://"+$bucket+"/"+$obj'`
+zipname="${service}-`basename $s3_url`"
+aws s3 cp $s3_url $dir/$zipname > /dev/null 2>&1
+
+unzip $dir/$zipname -d $dir/$service > /dev/null 2>&1
+    # cat $dir/$service/hook.json | jq -r '.|.head_commit|. as {id:$id}| ""'
+    # cat $dir/$service/hook.json | jq -r --arg service "$service" '.|.head_commit|. as {id:$id} | $service+" commit id is "+$id'
+cat $dir/$service/hook.json | jq -r --arg service "$service" '(.head_commit.id) as $id | (.repository.name ) as $name             | $name+", "+$service+", "+$id '

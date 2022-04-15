@@ -1,0 +1,3 @@
+#!/bin/zsh
+# terraform review apply
+terraform apply plan.out 2>&1 | tee -a .result-$(date +"%Y-%m-%d-%H-%M").txt

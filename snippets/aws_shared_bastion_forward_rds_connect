@@ -1,0 +1,15 @@
+#!/bin/zsh
+# aws shared bastion forward rds connect
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+echo $AWS_PROFILE
+FZF_RDS=$(aws secretsmanager list-secrets --filters '[{"Key": "all", "Values": ["database"]}]' | jq -r ".SecretList | .[].Name" | fzf)
+if [ -z "$FZF_RDS" ]; then
+    return false
+fi
+RDS=$(aws secretsmanager get-secret-value --secret-id $FZF_RDS | jq -r ".SecretString")
+echo $RDS | jq
+echo $RDS | jq -r ".dbname" | tr -d "\n" | pbcopy; sleep 1
+echo $RDS | jq -r ".host" | tr -d "\n" | pbcopy; sleep 1
+echo $RDS | jq -r ".username" | tr -d "\n" | pbcopy; sleep 1
+echo $RDS | jq -r ".password" | tr -d "\n" | pbcopy; sleep 1
+ssh -vvv root@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=shared-bastion" | jq -r  ".Reservations[].Instances[].InstanceId") -N -L 3306:$(echo $RDS | jq -r ".host"):3306

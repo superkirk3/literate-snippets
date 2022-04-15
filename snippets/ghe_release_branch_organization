@@ -1,0 +1,46 @@
+#!/bin/zsh
+# ghe release branch organization aws codepipeline sha hash
+# REPO='uid.workflow'
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+
+REPO=`awk -F', ' '{print $1}' $CSV | fzf`
+PIPELINE_PREFIX='cell-qa'
+TARGET_BRANCH='release-ga-cell1'
+
+CSV='$MY_ORG_PATH/uid/daily/codepipeline-zip-hash/repo-pipeline.csv'
+PIPELINE="$PIPELINE_PREFIX-`awk -F', ' -v REPO="$REPO" '$1 == REPO { print $2; exit }' $CSV`"
+
+echo $PIPELINE
+
+dir="/tmp/commit_id"
+if [[ -d "$dir" ]];then
+  rm -rf $dir
+fi
+mkdir -p $dir
+
+aws s3 cp $s3_url $dir/$zipname > /dev/null 2>&1
+exec_id=`aws codepipeline list-pipeline-executions --pipeline-name $PIPELINE | jq -r '(.pipelineExecutionSummaries | map( .startTime ) | max) as $MAX_STARTTIME | .pipelineExecutionSummaries[] | select( .startTime == $MAX_STARTTIME) | .pipelineExecutionId '`
+# echo $exec_id
+
+s3_url=`aws codepipeline list-action-executions --pipeline-name $PIPELINE --filter pipelineExecutionId=$exec_id | jq -r '.actionExecutionDetails|.[] | select(.stageName=="WebHook")|.input.configuration|. as {S3Bucket:$bucket,S3ObjectKey:$obj}| "s3://"+$bucket+"/"+$obj'`
+# echo $s3_url
+
+zipname="${PIPELINE}-`basename $s3_url`"
+#echo $zipname
+
+aws s3 cp $s3_url $dir/$zipname > /dev/null 2>&1
+unzip $dir/$zipname -d $dir/$PIPELINE > /dev/null 2>&1
+# cat $dir/$PIPELINE/hook.json | jq -r --arg PIPELINE "$PIPELINE" '(.head_commit.id) as $id | (.repository.name ) as $name | $name+", "+$PIPELINE+", "+$id '
+BASE_SHA=`cat $dir/$PIPELINE/hook.json | jq -r --arg PIPELINE "$PIPELINE" '(.head_commit.id) as $id | (.repository.name ) as $name | $id '`
+
+echo "\n\n"
+echo "\e[0;33m#########################"
+echo "# $REPO"
+echo "#########################\e[0m"
+
+TARGET_BRANCH_SHA=`gh api -XGET repos/unifi/$REPO/git/ref/heads/$TARGET_BRANCH --jq '.object.sha'` > /dev/null 2>&1
+
+if [[ $BASE_SHA == $TARGET_BRANCH_SHA ]]; then
+    echo "codepipeline commit id = $TARGET_BRANCH commit id"
+    return
+fi
