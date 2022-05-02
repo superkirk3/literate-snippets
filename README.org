@@ -137,6 +137,7 @@ bindkey "^[^[" _tru_fzf-snippet
     - [[#silicon-screenshot][silicon screenshot]]
     - [[#ffmpeg-download-m3u8-to-mp4][ffmpeg download m3u8 to mp4]]
     - [[#print-all-the-color][print all the color]]
+    - [[#shell-switch-to-x86_64-amd64-with-rosetta][shell switch to x86_64 amd64 with rosetta]]
 
 ** Functions
 *** tru/all-the-color
@@ -1453,6 +1454,13 @@ ffmpeg -i ${m3u8} -c copy -bsf:a aac_adtstoasc output.mp4
 #!/bin/zsh
 # print all ansi color
 for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6)):#3}:+$'\n'}; done
+#+end_src
+
+*** shell switch to x86_64 amd64 with rosetta
+#+begin_src sh
+#!/bin/zsh
+# shell switch to x86_64 / amd64 rosetta
+env /usr/bin/arch -x86_64 /bin/zsh —-login
 #+end_src
 
 * Local Variables                                                               :noexport:
