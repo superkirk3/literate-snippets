@@ -1,0 +1,3 @@
+#!/bin/zsh
+# aws sesv2 list suppressed emails
+aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[] | select (.EmailAddress == "'`aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[].EmailAddress' | fzf`'")'
