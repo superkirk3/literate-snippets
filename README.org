@@ -1321,6 +1321,13 @@ echo $RDS | jq -r ".password" | tr -d "\n" | pbcopy; sleep 1
 ssh -vvv root@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=shared-bastion" | jq -r  ".Reservations[].Instances[].InstanceId") -N -L 3306:$(echo $RDS | jq -r ".host"):3306
 #+end_src
 
+**** aws sesv2 list suppressed destinations
+#+begin_src sh
+#!/bin/zsh
+# aws sesv2 list suppressed emails
+aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[] | select (.EmailAddress == "'`aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[].EmailAddress' | fzf`'")'
+#+end_src
+
 **** aws cloudfront clear cache
 #+begin_src sh
 #!/bin/zsh
