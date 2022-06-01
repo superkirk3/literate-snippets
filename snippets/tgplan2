@@ -20,7 +20,7 @@ fi
 
 export TG_SRC=$UID_TF_MODULES_BASE_PATH/$WORKTREE/product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
 # replace remote git to local git
-export remote_git='ssh://git@git.uidev.tools/devops/devops.terraform.git'
+export remote_git='ssh://git@github.com/Ubiquiti-UID/uid.devops.terraform.git'
 export local_git=$devops_terraform_local_git
 echo $local_git
 
