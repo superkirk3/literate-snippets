@@ -86,6 +86,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#tfplan][tfplan]]
       - [[#tfapply][tfapply]]
       - [[#tfplan-and-apply][tfplan and apply]]
+      - [[#cn-tgplan2][cn tgplan2]]
     - [[#git][git]]
       - [[#git-diff-name-only][git diff name only]]
       - [[#git-log-history-search][git log history search]]
@@ -107,6 +108,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#ghe-get-commit-id-from-aws-codepipeline-zip-file][ghe get commit id from aws codepipeline zip file]]
       - [[#ghe-pr-diff-folder][ghe pr diff folder]]
       - [[#gh-set-default-branch][gh set default branch]]
+      - [[#gh-create-new-branch][gh create new branch]]
       - [[#gh-issue-search-filter-today-involves][gh issue search filter today involves]]
       - [[#gh-issue-has-new-comments][gh issue has new comments]]
     - [[#aws][aws]]
@@ -116,6 +118,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#aws-update-service-desired-count][aws update-service desired-count]]
       - [[#aws-application-autoscaling-describe-scalable-targets][aws application-autoscaling describe-scalable-targets]]
       - [[#aws-ecs-enable-containerinsights][aws ecs enable containerInsights]]
+      - [[#aws-ecs-enable-multi-containerinsights][aws ecs enable multi containerInsights]]
       - [[#aws-get-secrets][aws get secrets]]
       - [[#aws-set-secrets][aws set secrets]]
       - [[#aws-delete-secrets-force-without-recovery][aws delete secrets force without recovery]]
@@ -124,6 +127,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#aws-shared-bastion-forward-rds-connect][aws shared bastion forward rds connect]]
       - [[#aws-sesv2-list-suppressed-destinations][aws sesv2 list suppressed destinations]]
       - [[#aws-cloudfront-clear-cache][aws cloudfront clear cache]]
+      - [[#aws-billing-and-cost][aws billing and cost]]
     - [[#ssh-config-patch][ssh config patch]]
     - [[#ssh-config-unpatch][ssh config unpatch]]
     - [[#gitea-up][gitea up]]
@@ -613,6 +617,58 @@ tfplan
 tfapply
 #+end_src
 
+**** cn tgplan2
+#+begin_src sh
+#!/bin/zsh
+# tgplan terraform terragrunt plan
+export UID_TF_MODULES_BASE_PATH=/Users/tru/Dropbox/git/src/github.com/Ubiquiti-CN
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -t|--worktree) ARG_WORKTREE="$2"; shift ;;
+    esac
+    shift
+done
+
+if [ -z "$ARG_WORKTREE" ]; then
+    WORKTREE=`ls $UID_TF_MODULES_BASE_PATH | fzf --query "$WORKTREE"`
+    if [ -z "$WORKTREE" ]; then
+        return false
+    fi
+else
+    WORKTREE=$ARG_WORKTREE
+fi
+
+export TG_SRC=$UID_TF_MODULES_BASE_PATH/$WORKTREE/terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+echo $TG_SRC
+# replace remote git to local git
+export remote_git='ssh://git@github.com/Ubiquiti-UID/uid.devops.terraform.git'
+export local_git=$devops_terraform_local_git
+echo $local_git
+
+# cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+cd $TG_SRC
+# git grep -rli 'git@git.uidev.tools/devops/devops.terraform.git' * | xargs sed -i '' 's|ssh://git@git.uidev.tools/devops/devops.terraform.git|$GIT_MIRROR_PATH/devops.terraform.git|g'
+git grep -rli $remote_git * | xargs sed -i '' "s|$remote_git|$local_git|g"
+cd -
+# end replace
+# git -C '$DEV_CONFIG_PATH/ssh' apply uidev.local.patch
+[ ! -f .terraform-version ] && echo "0.13.2.1" > .terraform-version
+
+rm -rf .terragrunt-cache
+echo "TG_SRC: $TG_SRC"
+terragrunt plan --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt &&  terragrunt show --json --terragrunt-source $TG_SRC `pwd`/plan.out 2>/dev/null | jq -r '([.resource_changes[].change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' | tee CHANGES.JSON.txt
+# rm -f .terraform-version
+# replace back
+# cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
+cd $TG_SRC
+git grep -rli $local_git * | xargs sed -i '' "s|$local_git|$remote_git|g"
+cd -
+# end replace
+
+#+end_src
+
+
 *** git
 **** git log diff merges                                                     :noexport:
 #+begin_src sh :tangle no :results output silent
@@ -1077,6 +1133,13 @@ gh pr diff ${PR} --repo ubiquiti-uid/uid.terraform-modules | grep 'diff' | awk -
 REPO=`gh api -XGET "orgs/ubiquiti-uid/repos" --paginate | jq -r '.[] | .name' | fzf` && echo "gh repo edit ubiquiti-uid/$REPO --default-branch `gh api -XGET --paginate "repos/ubiquiti-uid/$REPO/branches" | jq -r '.[] | .name' | fzf`" | tee /dev/tty | zsh
 #+end_src
 
+**** gh create new branch
+#+begin_src shell
+#!/bin/zsh
+# gh api post create branch from sha
+gh api -XPOST "repos/ubiquiti-uid/${repo}/git/refs" -f ref="refs/heads/${branch}" -f sha=${commitId}
+#+end_src
+
 **** gh issue search filter today involves
 #+begin_src shell
 #!/bin/zsh
@@ -1260,6 +1323,35 @@ echo $name
 # aws ecs update-cluster-settings --cluster $name --settings name=containerInsights,value=enabled
 #+end_src
 
+**** aws ecs enable multi containerInsights
+#+begin_src sh
+#!/bin/zsh
+# aws ecs enable containerInsights multi
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+echo $AWS_PROFILE
+# export AWS_REGION=us-west-2
+
+#app=${app}
+#name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | select( .name | contains("-'$app'")) | .name'`
+#name=`aws codepipeline list-pipelines | jq -c '.[]' | jq -r '.[] | select( .name | contains("config")|not) | .name' | fzf -m -e`
+name=`aws ecs list-clusters | jq -r '.clusterArns | .[]' | awk -F ':' '{print $6}' | cut -d'/' -f 2 | fzf -m -e`
+ecs="name\tcontainerInsights\n"
+for i in `echo $name`; do
+    ecs+=`aws ecs describe-clusters --cluster $i --include=SETTINGS | jq -r ".clusters[] | {name: (.clusterName), value: (.settings[].value)} | flatten | @tsv"`"\n"
+done
+echo $ecs | column -s $'\t' -t
+echo -n "\nContinue? ( yes/no ) "; read continue
+if [ $continue = "yes" ]; then
+    echo "\nContinue...\n"
+    for i in `echo $name`
+    do
+        aws ecs update-cluster-settings --cluster $i --settings name=containerInsights,value=enabled | jq -r ".cluster | {name: (.clusterName), value: (.settings[].value)}"
+    done
+
+fi
+#+end_src
+
+
 **** aws get secrets
 #+begin_src sh
 #!/bin/zsh
@@ -1309,6 +1401,13 @@ export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '['
 #!/bin/zsh
 # aws shared bastion forward rds connect
 export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+
+tmp_LOCAL_PORT=${LOCAL_PORT:-3306}
+export LOCAL_PORT=
+echo -n "Enter LOCAL_PORT [current: $tmp_LOCAL_PORT]: "; read LOCAL_PORT
+export LOCAL_PORT=${LOCAL_PORT:-${tmp_LOCAL_PORT}}
+echo $LOCAL_PORT
+
 echo $AWS_PROFILE
 FZF_RDS=$(aws secretsmanager list-secrets --filters '[{"Key": "all", "Values": ["database"]}]' | jq -r ".SecretList | .[].Name" | fzf)
 if [ -z "$FZF_RDS" ]; then
@@ -1320,14 +1419,68 @@ echo $RDS | jq -r ".dbname" | tr -d "\n" | pbcopy; sleep 1
 echo $RDS | jq -r ".host" | tr -d "\n" | pbcopy; sleep 1
 echo $RDS | jq -r ".username" | tr -d "\n" | pbcopy; sleep 1
 echo $RDS | jq -r ".password" | tr -d "\n" | pbcopy; sleep 1
-ssh -vvv root@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=shared-bastion" | jq -r  ".Reservations[].Instances[].InstanceId") -N -L 3306:$(echo $RDS | jq -r ".host"):3306
+
+read -r -d '' PROPERTIES  << EOM
+:PROPERTIES:
+:header-args:sql: :engine mysql
+:header-args:sql+: :dbuser `echo $RDS | jq -r ".username" | tr -d "\n"`
+:header-args:sql+: :dbhost 127.0.0.1
+:header-args:sql+: :dbport $LOCAL_PORT
+:header-args:sql+: :database `echo $RDS | jq -r ".dbname" | tr -d "\n"`
+:header-args:sql+: :cmdline "-p'`echo $RDS | jq -r ".password" | tr -d "\n"`'"
+:header-args:sql+: :exports both
+:END:
+EOM
+
+echo $PROPERTIES | pbcopy; sleep 1
+
+ssh -vvv root@$(aws ec2 describe-instances --filters "Name=tag:Name,Values=shared-bastion" | jq -r  ".Reservations[].Instances[].InstanceId") -N -L $LOCAL_PORT:$(echo $RDS | jq -r ".host"):3306
 #+end_src
 
 **** aws sesv2 list suppressed destinations
 #+begin_src sh
 #!/bin/zsh
 # aws sesv2 list suppressed emails
-aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[] | select (.EmailAddress == "'`aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[].EmailAddress' | fzf`'")'
+function ses_search_email() {
+    AWS_COMMAND="aws sesv2 list-suppressed-destinations"
+    unset NEXT_TOKEN
+    SUPPRESSION_LIST=""
+
+    function parse_output() {
+    if [ ! -z "$cli_output" ]; then
+        # The output parsing below also needs to be adapted as needed.
+        SUPPRESSION_LIST+=`echo $cli_output | jq -r '.SuppressedDestinationSummaries[].EmailAddress'`
+        NEXT_TOKEN=$(echo $cli_output | jq -r ".NextToken")
+    fi
+    }
+
+    # The command is run and output parsed in the below statements.
+    cli_output=`eval $AWS_COMMAND`
+    parse_output
+    # echo $SUPPRESSION_LIST
+
+    # The below while loop runs until either the command errors due to throttling or
+    # comes back with a pagination token.  In the case of being throttled / throwing
+    # an error, it sleeps for three seconds and then tries again.
+    while [[ "$NEXT_TOKEN" != "null" ]]; do
+    if [[ "$NEXT_TOKEN" == "null" ]] || [[ -z "$NEXT_TOKEN" ]] ; then
+        # echo "now running: $AWS_COMMAND "
+        sleep 3
+        cli_output=`eval $AWS_COMMAND`
+        parse_output
+    else
+        # echo "now paginating: $AWS_COMMAND --next-token $NEXT_TOKEN"
+        sleep 3
+        cli_output=`eval $AWS_COMMAND --next-token $NEXT_TOKEN`
+        parse_output
+    fi
+    done  #pagination loop
+
+    echo $SUPPRESSION_LIST | tr " " "\n" | fzf
+}
+
+export AWS_PROFILE=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`
+aws sesv2 get-suppressed-destination --email-address  "`ses_search_email`"
 #+end_src
 
 **** aws cloudfront clear cache
@@ -1335,6 +1488,13 @@ aws sesv2 list-suppressed-destinations | jq -r '.SuppressedDestinationSummaries[
 #!/bin/zsh
 # aws cloudfront cache
 aws cloudfront create-invalidation --distribution-id=${distributionid} --paths "/${path}*"
+#+end_src
+
+**** aws billing and cost
+#+begin_src sh
+#!/bin/zsh
+# aws billing cost
+aws ce get-cost-and-usage --time-period Start=${start},End=${end} --granularity MONTHLY --metrics "UnblendedCost" --query 'ResultsByTime[*].Total.UnblendedCost.Amount' --output table
 #+end_src
 
 *** ssh config patch
