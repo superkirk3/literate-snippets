@@ -599,6 +599,9 @@ terragrunt apply --terragrunt-source $TG_SRC plan.out 2>&1 | tee -a `pwd`/result
 #+begin_src sh
 #!/bin/zsh
 # terraform review plan
+if [[ $(PWD) =~ ".*github.com/Ubiquiti-UID/uid.repo-privilege.*" ]]; then
+    export GITHUB_APP_PEM_FILE=`pass show ubiquiti/uid/github_app_token`
+fi
 terraform init && terraform plan -out plan.out && terraform show plan.out > .plan-$(date +"%Y-%m-%d-%H-%M").txt
 #+end_src
 
@@ -606,6 +609,9 @@ terraform init && terraform plan -out plan.out && terraform show plan.out > .pla
 #+begin_src sh
 #!/bin/zsh
 # terraform review apply
+if [[ $(PWD) =~ ".*github.com/Ubiquiti-UID/uid.repo-privilege.*" ]]; then
+    export GITHUB_APP_PEM_FILE=`pass show ubiquiti/uid/github_app_token`
+fi
 terraform apply plan.out 2>&1 | tee -a .result-$(date +"%Y-%m-%d-%H-%M").txt
 #+end_src
 
@@ -1097,7 +1103,7 @@ if [[ -d "$dir" ]];then
 fi
 mkdir -p $dir
 
-service=`aws codepipeline list-pipelines | jq -r '.[] | .[] | .name' | grep -vE 'ssm|release|www' | fzf`
+service=`aws codepipeline list-pipelines | jq -r '.[] | .[] | .name' | grep -vE 'release|www' | fzf`
 
 constants=$(aws codepipeline list-pipeline-executions --pipeline-name $service | jq -r '(.pipelineExecutionSummaries | map( .startTime ) | max) as $MAX_STARTTIME | .pipelineExecutionSummaries[] | select( .startTime == $MAX_STARTTIME) | {pipelineExecutionId, pipelineStatus:.status, startTime}| to_entries | .[] | .key + "=" + (.value | @sh)')
 

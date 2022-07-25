@@ -9,7 +9,7 @@ if [[ -d "$dir" ]];then
 fi
 mkdir -p $dir
 
-service=`aws codepipeline list-pipelines | jq -r '.[] | .[] | .name' | grep -vE 'ssm|release|www' | fzf`
+service=`aws codepipeline list-pipelines | jq -r '.[] | .[] | .name' | grep -vE 'release|www' | fzf`
 
 constants=$(aws codepipeline list-pipeline-executions --pipeline-name $service | jq -r '(.pipelineExecutionSummaries | map( .startTime ) | max) as $MAX_STARTTIME | .pipelineExecutionSummaries[] | select( .startTime == $MAX_STARTTIME) | {pipelineExecutionId, pipelineStatus:.status, startTime}| to_entries | .[] | .key + "=" + (.value | @sh)')
 
