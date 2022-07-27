@@ -125,6 +125,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#aws-clear-envs][aws clear envs]]
       - [[#aws-shared-bastion][aws shared bastion]]
       - [[#aws-shared-bastion-forward-rds-connect][aws shared bastion forward rds connect]]
+      - [[#aws-shared-bastion-forward-rds-connect-multiple][aws shared bastion forward rds connect multiple]]
       - [[#aws-sesv2-list-suppressed-destinations][aws sesv2 list suppressed destinations]]
       - [[#aws-cloudfront-clear-cache][aws cloudfront clear cache]]
       - [[#aws-billing-and-cost][aws billing and cost]]
