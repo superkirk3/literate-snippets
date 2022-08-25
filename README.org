@@ -242,13 +242,21 @@ echo "${msg1}" "${msg2}"
 #!/bin/zsh
 # tgplan terraform terragrunt plan
 #export TG_SRC=../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
-
+targets=''
+TF_TARGETS=''
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -t|--worktree) ARG_WORKTREE="$2"; shift ;;
+        --targets) targets="$2"; shift ;;
     esac
     shift
 done
+
+if [ -n "$targets" ]; then
+    for i in `echo -n $targets | tr ',' '\n'`; do
+        TF_TARGETS+=" -target $i"
+    done
+fi
 
 if [ -z "$ARG_WORKTREE" ]; then
     WORKTREE=`ls $UID_TF_MODULES_BASE_PATH | fzf --query "$WORKTREE"`
@@ -276,7 +284,7 @@ cd -
 
 rm -rf .terragrunt-cache
 echo "TG_SRC: $TG_SRC"
-terragrunt plan --terragrunt-source $TG_SRC -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt &&  terragrunt show --json --terragrunt-source $TG_SRC `pwd`/plan.out 2>/dev/null | jq -r '([.resource_changes[].change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' | tee CHANGES.JSON.txt
+terragrunt plan --terragrunt-source $TG_SRC $(echo "$TF_TARGETS" | tr -d '\n') -out `pwd`/plan.out 2>&1 && terragrunt show --terragrunt-source $TG_SRC `pwd`/plan.out | tee -a `pwd`/plan-`date +"%Y-%m-%d-%H-%M-%S"`.txt &&  terragrunt show --json --terragrunt-source $TG_SRC `pwd`/plan.out 2>/dev/null | jq -r '([.resource_changes[].change.actions?]|flatten)|{"create":(map(select(.=="create"))|length),"update":(map(select(.=="update"))|length),"delete":(map(select(.=="delete"))|length)}' | tee CHANGES.JSON.txt
 # rm -f .terraform-version
 # replace back
 # cd ../../../../../../product-uid.terraform-modules//$(basename $(dirname $PWD))/$(basename $PWD)
