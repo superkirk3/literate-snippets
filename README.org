@@ -129,6 +129,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#aws-sesv2-list-suppressed-destinations][aws sesv2 list suppressed destinations]]
       - [[#aws-cloudfront-clear-cache][aws cloudfront clear cache]]
       - [[#aws-billing-and-cost][aws billing and cost]]
+      - [[#aws-get-credentials][aws get credentials]]
     - [[#ssh-config-patch][ssh config patch]]
     - [[#ssh-config-unpatch][ssh config unpatch]]
     - [[#gitea-up][gitea up]]
@@ -532,7 +533,7 @@ do
     if [ $APPLY = 'false' ];then
         echo 'plan'
         # tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} "  date && cd $TF_PATH/$i && echo 'hi'" C-m; sleep 0.5
-        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && zsh $snippets_dir/tgplan2 -t $UID_WORKTREE  && date && cat CHANGES.JSON.txt | jq" C-m
+        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && rm -f plan.out CHANGES.JSON.txt && zsh $snippets_dir/tgplan2 -t $UID_WORKTREE  && date && cat CHANGES.JSON.txt | jq" C-m
     fi
 
     if [ $APPLY = 'true' ];then
@@ -1366,7 +1367,6 @@ if [ $continue = "yes" ]; then
 fi
 #+end_src
 
-
 **** aws get secrets
 #+begin_src sh
 #!/bin/zsh
@@ -1567,6 +1567,22 @@ aws cloudfront create-invalidation --distribution-id=${distributionid} --paths "
 #!/bin/zsh
 # aws billing cost
 aws ce get-cost-and-usage --time-period Start=${start},End=${end} --granularity MONTHLY --metrics "UnblendedCost" --query 'ResultsByTime[*].Total.UnblendedCost.Amount' --output table
+#+end_src
+
+**** aws get credentials
+#+begin_src sh
+#!/bin/zsh
+# aws get credentials
+profile=`cat ~/.aws/credentials | grep '\[' | grep -v '#' | tr -d '[' | tr -d ']' | fzf --query "$AWS_PROFILE"`     
+read -r -d '' aws_env  << EOM
+export AWS_PROFILE="$profile"
+export AWS_REGION="$(aws configure get region --profile $profile)"
+export AWS_DEFAULT_REGION="$(aws configure get region --profile $profile)"
+export AWS_ACCESS_KEY_ID="$(aws configure get aws_access_key_id --profile $profile)"
+export AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key --profile $profile)"
+export AWS_SESSION_TOKEN="$(aws configure get aws_session_token --profile $profile)"
+EOM
+echo $aws_env | pbcopy
 #+end_src
 
 *** ssh config patch

@@ -102,7 +102,7 @@ do
     if [ $APPLY = 'false' ];then
         echo 'plan'
         # tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} "  date && cd $TF_PATH/$i && echo 'hi'" C-m; sleep 0.5
-        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && zsh $snippets_dir/tgplan2 -t $UID_WORKTREE  && date && cat CHANGES.JSON.txt | jq" C-m
+        tmux send-keys -t ${SESSION_NAME}:${WINDOW_NAME} " date && cd $TF_PATH/$i && rm -f plan.out CHANGES.JSON.txt && zsh $snippets_dir/tgplan2 -t $UID_WORKTREE  && date && cat CHANGES.JSON.txt | jq" C-m
     fi
 
     if [ $APPLY = 'true' ];then
