@@ -1,0 +1,15 @@
+#!/bin/zsh
+# gh pr force merge admin
+unset PR_URL
+echo "eg: https://github.com/Ubiquiti-UID/uid.network/pull/128\n"
+echo -n "Enter PR full URL: "; read PR_URL
+# PR_URL='https://github.com/Ubiquiti-UID/uid.network/pull/128'
+if [ -z "$PR_URL" ]; then
+    return false
+fi
+
+pr=`echo $PR_URL | awk -F '/' '{print $7}'`
+repo=`echo $PR_URL | awk -F '/' '{print $5}'`
+echo ""
+gh api --method DELETE  /repos/ubiquiti-uid/$repo/branches/`gh pr view 128 --repo Ubiquiti-UID/$repo --json baseRefName | jq -r '.baseRefName'`/protection/enforce_admins --include
+gh pr merge $pr -m  -R github.com/Ubiquiti-UID/$repo --admin

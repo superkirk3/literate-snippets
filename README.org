@@ -111,6 +111,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#gh-create-new-branch][gh create new branch]]
       - [[#gh-issue-search-filter-today-involves][gh issue search filter today involves]]
       - [[#gh-issue-has-new-comments][gh issue has new comments]]
+      - [[#gh-force-merge-no-signed-commits-prs][gh force merge no signed commits prs]]
     - [[#aws][aws]]
       - [[#aws-waf][aws waf]]
       - [[#aws-codepipeline-restart][aws codepipeline restart]]
@@ -1192,6 +1193,26 @@ gh issue list --repo "Ubiquiti-UID/uid.devops-pandora" -s open -S "is:issue sort
           | { title, number, url, new_comment: (.comments | max_by(.createdAt) | select(.author.login!="tru2dagame")) }
           | "########", "\(.url)", "\u001b[32m\(.title)\u001b[0m", "\(.new_comment.author.login):", " ", "\(.new_comment.body | .[0:200])"'
 #+end_src
+
+**** gh force merge no signed commits prs
+#+begin_src shell
+#!/bin/zsh
+# gh pr force merge admin
+unset PR_URL
+echo "eg: https://github.com/Ubiquiti-UID/uid.network/pull/128\n"
+echo -n "Enter PR full URL: "; read PR_URL
+# PR_URL='https://github.com/Ubiquiti-UID/uid.network/pull/128'
+if [ -z "$PR_URL" ]; then
+    return false
+fi
+
+pr=`echo $PR_URL | awk -F '/' '{print $7}'`
+repo=`echo $PR_URL | awk -F '/' '{print $5}'`
+echo ""
+gh api --method DELETE  /repos/ubiquiti-uid/$repo/branches/`gh pr view 128 --repo Ubiquiti-UID/$repo --json baseRefName | jq -r '.baseRefName'`/protection/enforce_admins --include
+gh pr merge $pr -m  -R github.com/Ubiquiti-UID/$repo --admin
+#+end_src
+
 *** aws
 **** aws waf
 #+begin_src sh
