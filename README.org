@@ -1,5 +1,6 @@
 #+TITLE: Literate-DevOps
 #+STARTUP: show4levels
+#+auto_tangle: t
 
 [[./demo.gif]]
 
@@ -1984,7 +1985,3 @@ for i in {0..255}; do print -Pn "%K{$i}  %k%F{$i}${(l:3::0:)i}%f " ${${(M)$((i%6
 env /usr/bin/arch -x86_64 /bin/zsh —-login
 #+end_src
 
-* Local Variables                                                               :noexport:
-# Local Variables:
-# eval: (add-hook 'after-save-hook (lambda ()(org-babel-tangle)) nil t)
-# End:
