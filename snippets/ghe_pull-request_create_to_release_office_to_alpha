@@ -1,7 +1,7 @@
 #!/bin/zsh
 # ghe create pull request pr release df to alpha
  cd ~github.com/Ubiquiti-UID/PRs/`date -v +0d +'%Y-%m-%d'`
-for dir in `cat repo.txt | grep 'core'`
+for dir in `cat repo.txt`
 do
     echo "----------- $dir ----------------"
     DAY2=`date -v +2d +'%Y-%m-%d'`
