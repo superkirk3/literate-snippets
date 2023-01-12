@@ -1633,7 +1633,9 @@ for service in $(aws deploy list-applications | jq -r '.[][]')
 #for service in $(echo "cell-proto-api-gw2" "cell-proto-tools")
 do
     echo $service
-read -p "Continue (Yes/No)?" choice
+    #read -p "Continue (Yes/No)?" choice
+#fix for zsh
+read "choice?Continue (Yes/No)?"
 case "$choice" in 
   yes|Yes ) mychoice="deploy";;
   no|No ) echo "no";;
@@ -1647,8 +1649,10 @@ then
     for groups in $(aws deploy list-deployment-groups --application-name "$service"|jq -r '.[][]')
     do
 	  echo $mychoiceagain
-	echo "DEPLOYMENT-GROUP: $groups"
-	read -p "Continue (Yes/No)?" choiceagain
+	  echo "DEPLOYMENT-GROUP: $groups"
+	 # read -p "Continue (Yes/No)?" choiceagain
+	  read "choiceagain?Continue (Yes/No)?"
+	  #fix for zsh
         case "$choiceagain" in 
           yes|Yes ) mychoiceagain="deploy";;
           no|No ) echo "no";;
@@ -1667,7 +1671,7 @@ then
 	    while [ $(aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r) != "Succeeded" ]
 	    do
 		aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r 
-		#aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r  | jq '.deploymentInfo.deploymentOverview'
+		#aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.deploymentOverview'
 		tput cuu1
 		sleep 5
 	    done
@@ -1685,6 +1689,7 @@ fi
 	  mychoice="no"
 done
 #+end_src
+
 *** ssh config patch
 #+begin_src shell
 #!/bin/zsh
