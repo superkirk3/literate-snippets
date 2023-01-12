@@ -612,6 +612,7 @@ terragrunt apply --terragrunt-source $TG_SRC plan.out 2>&1 | tee -a `pwd`/result
 # terraform review plan
 if [[ $(PWD) =~ ".*github.com/Ubiquiti-UID/uid.repo-privilege.*" ]]; then
     export GITHUB_APP_PEM_FILE=`pass show ubiquiti/uid/github_app_token`
+    rm -f .terraform.lock.hcl
 fi
 terraform init && terraform plan -out plan.out && terraform show plan.out > .plan-$(date +"%Y-%m-%d-%H-%M").txt
 #+end_src
@@ -758,7 +759,7 @@ do
 #!/bin/zsh
 # ghe create pull request pr release df to alpha
  cd ~github.com/Ubiquiti-UID/PRs/`date -v +0d +'%Y-%m-%d'`
-for dir in `cat repo.txt | grep 'core'`
+for dir in `cat repo.txt`
 do
     echo "----------- $dir ----------------"
     DAY2=`date -v +2d +'%Y-%m-%d'`
