@@ -1666,7 +1666,7 @@ then
 	    echo "redeployment SERVICE: $service DEPLOYMENT-GROUP: $groups DEPLOYMENT-ID: $deployid"
             hashid=$(aws deploy get-deployment --deployment-id "$deployid" | jq '.deploymentInfo.revision.string[]' -r)
 	    echo "redeployment SERVICE: $service DEPLOYMENT-GROUP: $groups DEPLOYMENT-ID: $deployid REVISION: $hashid"
-            aws deploy create-deployment --application-name "$service" --deployment-group-name "$groups" --auto-rollback-configuration '{"enabled":true,"events":["DEPLOYMENT_FAILURE"]}' --revision "{\"revisionType\":\"String\",\"string\":{\"sha256\":\"$hashid\"}}" --region us-west-2 | jq .deploymentId -r > /tmp/deploy_tmp_file_lock
+            aws deploy create-deployment --application-name "$service" --deployment-group-name "$groups" --auto-rollback-configuration '{"enabled":true,"events":["DEPLOYMENT_FAILURE"]}' --revision "{\"revisionType\":\"String\",\"string\":{\"sha256\":\"$hashid\"}}" | jq .deploymentId -r > /tmp/deploy_tmp_file_lock
 	    cat /tmp/deploy_tmp_file_lock
 	    while [ $(aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r) != "Succeeded" ]
 	    do
