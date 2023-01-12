@@ -1,3 +1,4 @@
+#!/bin/zsh
 # aws deployment list retry deployment
 #export AWS_PROFILE="admin@uid-cell-proto"
 for service in $(aws deploy list-applications | jq -r '.[][]')

@@ -1629,6 +1629,7 @@ echo $aws_env | pbcopy
   The AWS Fargate patch causes the ecs tasks to start automatically after a certain amount of time.It will affect many services every time, and manual clicking is time-consuming. However, running in batches without manual confirmation may affect the stability of production environment services.
   Code pipeline retries for deployment scripts per service and deployment group - requires manual confirmation
 #+begin_src sh
+#!/bin/zsh
 # aws deployment list retry deployment
 #export AWS_PROFILE="admin@uid-cell-proto"
 for service in $(aws deploy list-applications | jq -r '.[][]')
