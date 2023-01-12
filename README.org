@@ -132,6 +132,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#aws-cloudfront-clear-cache][aws cloudfront clear cache]]
       - [[#aws-billing-and-cost][aws billing and cost]]
       - [[#aws-get-credentials][aws get credentials]]
+      - [[#aws-deployment-list-retry-deployment][aws deployment list retry deployment]]
     - [[#ssh-config-patch][ssh config patch]]
     - [[#ssh-config-unpatch][ssh config unpatch]]
     - [[#gitea-up][gitea up]]
@@ -1770,6 +1771,75 @@ export AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key --profil
 export AWS_SESSION_TOKEN="$(aws configure get aws_session_token --profile $profile)"
 EOM
 echo $aws_env | pbcopy
+#+end_src
+**** aws deployment list retry deployment
+- Note taken on [2023-01-12 Thu 01:02] \\
+  Process AWS Health Event arn:aws:health:eu-west-2::event/ECS/AWS_ECS_SECURITY_NOTIFICATION/AWS_ECS_SECURITY_NOTIFICATION
+  The AWS Fargate patch causes the ecs tasks to start automatically after a certain amount of time.It will affect many services every time, and manual clicking is time-consuming. However, running in batches without manual confirmation may affect the stability of production environment services.
+  Code pipeline retries for deployment scripts per service and deployment group - requires manual confirmation
+#+begin_src sh
+#!/bin/zsh
+# aws deployment list retry deployment
+#export AWS_PROFILE="admin@uid-cell-proto"
+for service in $(aws deploy list-applications | jq -r '.[][]')
+#for service in $(echo "cell-proto-api-gw2" "cell-proto-tools")
+do
+    echo $service
+    #read -p "Continue (Yes/No)?" choice
+#fix for zsh
+read "choice?Continue (Yes/No)?"
+case "$choice" in 
+  yes|Yes ) mychoice="deploy";;
+  no|No ) echo "no";;
+  * ) echo "invalid";;
+esac
+if [ "$mychoice" = "deploy" ];
+then
+	  mychoice="no"
+    echo "redeployment SERVICE: $service"
+    #  aws deploy list-deployment-groups --application-name "$service"
+    for groups in $(aws deploy list-deployment-groups --application-name "$service"|jq -r '.[][]')
+    do
+	  echo $mychoiceagain
+	  echo "DEPLOYMENT-GROUP: $groups"
+	 # read -p "Continue (Yes/No)?" choiceagain
+	  read "choiceagain?Continue (Yes/No)?"
+	  #fix for zsh
+        case "$choiceagain" in 
+          yes|Yes ) mychoiceagain="deploy";;
+          no|No ) echo "no";;
+          * ) echo "invalid";;
+        esac
+	if [ "$mychoiceagain" = "deploy" ];
+	then
+	    mychoiceagain="nochoice"
+	    echo "redeployment SERVICE: $service DEPLOYMENT-GROUP: $groups"
+            deployid=$(aws deploy list-deployments --application-name "$service" --deployment-group-name "$groups" --include-only-statuses "Succeeded" | jq -r ".[][0]")
+	    echo "redeployment SERVICE: $service DEPLOYMENT-GROUP: $groups DEPLOYMENT-ID: $deployid"
+            hashid=$(aws deploy get-deployment --deployment-id "$deployid" | jq '.deploymentInfo.revision.string[]' -r)
+	    echo "redeployment SERVICE: $service DEPLOYMENT-GROUP: $groups DEPLOYMENT-ID: $deployid REVISION: $hashid"
+            aws deploy create-deployment --application-name "$service" --deployment-group-name "$groups" --auto-rollback-configuration '{"enabled":true,"events":["DEPLOYMENT_FAILURE"]}' --revision "{\"revisionType\":\"String\",\"string\":{\"sha256\":\"$hashid\"}}" | jq .deploymentId -r > /tmp/deploy_tmp_file_lock
+	    cat /tmp/deploy_tmp_file_lock
+	    while [ $(aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r) != "Succeeded" ]
+	    do
+		aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r 
+		#aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.deploymentOverview'
+		tput cuu1
+		sleep 5
+	    done
+		aws deploy get-deployment --deployment-id "$(cat /tmp/deploy_tmp_file_lock)" | jq '.deploymentInfo.status' -r
+		  else
+            mychoiceagain="nochoice"
+	    echo "cancel SERVICE: $service DEPLOYMENT-GROUP: $groups"
+	fi
+	    mychoiceagain="nochoice"
+	done
+else
+	  mychoice="no"
+	  echo "cancel $service"
+fi
+	  mychoice="no"
+done
 #+end_src
 
 *** ssh config patch
