@@ -106,6 +106,7 @@ bindkey "^[^[" _tru_fzf-snippet
       - [[#ghe-api-enable-webhook][ghe api enable webhook]]
       - [[#ghe-release-branch-organization][ghe release branch organization]]
       - [[#ghe-get-commit-id-from-aws-codepipeline-zip-file][ghe get commit id from aws codepipeline zip file]]
+      - [[#gh-get-commit-id-from-branch-name][gh get commit id from branch name]]
       - [[#ghe-pr-diff-folder][ghe pr diff folder]]
       - [[#gh-set-default-branch][gh set default branch]]
       - [[#gh-create-new-branch][gh create new branch]]
