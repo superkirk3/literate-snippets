@@ -23,10 +23,14 @@ EOM
         line='$'
     fi
 
-    echo "$AWS_ENVS/$SERVICE" > echo.tmp
+    echo "<details><summary>$AWS_ENVS/$SERVICE</summary>" > echo.tmp
     echo "\n" >> echo.tmp
+    echo '```' >> echo.tmp
     cat $PLAN | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g' >> echo.tmp
     cat $RESULT | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g' | sed -n "1,${line}p" >> echo.tmp
+    echo '```' >> echo.tmp
+    echo "\n" >> echo.tmp
+    echo "</details>" >> echo.tmp
 
     cat echo.tmp | pbcopy
     rm -f echo.tmp
